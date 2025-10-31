@@ -7,113 +7,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@1.0.3"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link rel="stylesheet" href="shared-styles.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-
-    body {
-      background: linear-gradient(135deg, #0d1117 0%, #1a1f29 100%);
-      color: #fff;
-      min-height: 100vh;
-    }
-
-    nav {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 1.2rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #007bff, #00c6ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(0, 123, 255, 0.1);
-      padding: 10px 15px;
-      border-radius: 8px;
-      border: 1px solid rgba(0, 123, 255, 0.3);
-    }
-
-    .logout-btn {
-      padding: 10px 20px;
-      background: linear-gradient(135deg, #ff6b6b, #ff5252);
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-
-    .logout-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
-
-    .header {
-      margin-bottom: 40px;
-      text-align: center;
-    }
-
-    .header h1 {
-      font-size: 2.2rem;
-      margin-bottom: 10px;
-    }
-
-    .header p {
-      color: #aaa;
-      font-size: 1rem;
-    }
-
-    .alert {
-      background: rgba(0, 123, 255, 0.1);
-      border: 1px solid rgba(0, 123, 255, 0.3);
-      border-radius: 12px;
-      padding: 15px 20px;
-      margin-bottom: 30px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .alert.success {
-      background: rgba(81, 207, 102, 0.1);
-      border-color: rgba(81, 207, 102, 0.3);
-    }
-
     .dashboard-grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
@@ -137,11 +36,6 @@
       align-items: center;
     }
 
-    .card-header h3 {
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
     .status-badge {
       display: flex;
       align-items: center;
@@ -151,7 +45,6 @@
       border: 1px solid rgba(81, 207, 102, 0.3);
       border-radius: 20px;
       font-size: 0.85rem;
-      font-weight: 500;
     }
 
     .status-dot {
@@ -160,11 +53,6 @@
       background: #51cf66;
       border-radius: 50%;
       animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
     }
 
     .video-wrapper {
@@ -198,11 +86,6 @@
 
     .sleep-text {
       font-size: 3rem;
-    }
-
-    .sleep-message {
-      font-size: 1.2rem;
-      font-weight: 600;
     }
 
     .emotion-grid {
@@ -311,43 +194,20 @@
       margin-top: 5px;
     }
 
-    .action-buttons {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 30px;
-    }
-
-    .btn {
-      padding: 12px 24px;
-      border-radius: 10px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 1rem;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #007bff, #00c6ff);
-      color: #fff;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
-    }
-
-    .btn-secondary {
+    .alert {
       background: rgba(0, 123, 255, 0.1);
-      color: #00d4ff;
       border: 1px solid rgba(0, 123, 255, 0.3);
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
     }
 
-    .btn-danger {
-      background: linear-gradient(135deg, #ff6b6b, #ff5252);
-      color: #fff;
+    .alert.success {
+      background: rgba(81, 207, 102, 0.1);
+      border-color: rgba(81, 207, 102, 0.3);
     }
 
     @media (max-width: 1024px) {
@@ -358,184 +218,222 @@
   </style>
 </head>
 <body>
-  <nav>
-    <div class="logo">EduGaze Student</div>
-    <div class="nav-right">
-      <div class="user-info">
-        <span id="userName">Student</span>
-      </div>
-      <button class="logout-btn" onclick="logout()">Logout</button>
-    </div>
-  </nav>
-
-  <div class="container">
-    <div class="header">
-      <h1>Live Engagement Tracking</h1>
-      <p>Monitor your attention and emotion patterns in real-time</p>
-    </div>
-
-    <div class="alert" id="loadingAlert">
-      <span>Loading AI model... Please wait</span>
-    </div>
-
-    <div class="alert success" id="readyAlert" style="display: none;">
-      <span>System ready! Camera initialized successfully</span>
-    </div>
-
-    <div class="dashboard-grid">
-      <div class="card">
-        <div class="card-header">
-          <h3>Live Video Feed</h3>
-          <span class="status-badge" id="statusBadge">
-            <span class="status-dot"></span> Active
-          </span>
+    <nav>
+      <div class="logo">EduGaze Student</div>
+      <div class="nav-right">
+        <div class="user-info">
+          <span id="userName">Student</span>
         </div>
-        <div class="video-wrapper">
-          <video id="videoElement" autoplay playsinline></video>
-          <canvas id="canvas" style="display: none;"></canvas>
-          <div class="video-overlay" id="sleepOverlay">
-            <span class="sleep-text">💤</span>
-            <p class="sleep-message">Sleep detected</p>
-          </div>
-        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
+    </nav>
 
-      <div class="card">
-        <div class="card-header">
-          <h3>Emotion Analysis</h3>
-          <span style="font-size: 0.85rem; color: #aaa;">Live</span>
+    <div class="hero-section">
+        <div class="container">
+            <h1>Real-Time Emotion & Engagement Tracking</h1>
+            <p class="subtitle">AI-powered student attention monitoring for enhanced learning outcomes</p>
         </div>
-        <div class="emotion-grid">
-          <div class="emotion-item">
-            <div class="emotion-header">
-              <span class="emotion-icon">😊</span>
-              <span class="emotion-label">Smile</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill smile" id="smileBar" style="width: 0%">
-                <span class="progress-text" id="smileValue">0%</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="emotion-item">
-            <div class="emotion-header">
-              <span class="emotion-icon">😄</span>
-              <span class="emotion-label">Happy</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill happy" id="happyBar" style="width: 0%">
-                <span class="progress-text" id="happyValue">0%</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="emotion-item">
-            <div class="emotion-header">
-              <span class="emotion-icon">😮</span>
-              <span class="emotion-label">Surprised</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill surprised" id="surprisedBar" style="width: 0%">
-                <span class="progress-text" id="surprisedValue">0%</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="emotion-item">
-            <div class="emotion-header">
-              <span class="emotion-icon">😕</span>
-              <span class="emotion-label">Confused</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill confused" id="confusedBar" style="width: 0%">
-                <span class="progress-text" id="confusedValue">0%</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="emotion-item">
-            <div class="emotion-header">
-              <span class="emotion-icon">🎯</span>
-              <span class="emotion-label">Focused</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill focused" id="focusedBar" style="width: 0%">
-                <span class="progress-text" id="focusedValue">0%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">⏱️</div>
-        <p class="stat-label">Session Duration</p>
-        <p class="stat-value" id="sessionTime">00:00</p>
-      </div>
+    <div class="container main-container">
+        <div class="alert info-alert" id="loadingAlert">
+            <span class="alert-icon">⏳</span>
+            <span>Loading AI model... Please wait</span>
+        </div>
 
-      <div class="stat-card">
-        <div class="stat-icon">👁️</div>
-        <p class="stat-label">Blink Count</p>
-        <p class="stat-value" id="blinkCount">0</p>
-        <p class="stat-sub" id="blinkRate">0 blinks/min</p>
-      </div>
+        <div class="alert success-alert" id="readyAlert" style="display: none;">
+            <span class="alert-icon">✓</span>
+            <span>System ready! Camera initialized successfully</span>
+        </div>
 
-      <div class="stat-card">
-        <div class="stat-icon">😴</div>
-        <p class="stat-label">Sleep Time</p>
-        <p class="stat-value" id="sleepTime">0s</p>
-        <p class="stat-sub" id="sleepPercentage">0% of session</p>
-      </div>
+        <div class="dashboard-grid">
+            <!-- Video Feed Section -->
+            <div class="card video-card">
+                <div class="card-header">
+                    <h3>Live Video Feed</h3>
+                    <span class="status-badge" id="statusBadge">
+                        <span class="status-dot"></span> Active
+                    </span>
+                </div>
+                <div class="video-wrapper">
+                    <video id="videoElement" autoplay playsinline></video>
+                    <canvas id="canvas"></canvas>
+                    <div class="video-overlay" id="sleepOverlay" style="display: none;">
+                        <div class="sleep-alert">
+                            <span class="alert-icon">😴</span>
+                            <p>Student appears to be sleeping</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-      <div class="stat-card">
-        <div class="stat-icon">📊</div>
-        <p class="stat-label">Engagement Score</p>
-        <p class="stat-value" id="engagementScore">0%</p>
-        <p class="stat-sub" id="engagementStatus">Calculating...</p>
-      </div>
+            <!-- Emotion Analytics -->
+            <div class="card emotion-card">
+                <div class="card-header">
+                    <h3>Emotion Analysis</h3>
+                    <span class="update-indicator">Live</span>
+                </div>
+                <div class="emotion-grid">
+                    <div class="emotion-item">
+                        <div class="emotion-header">
+                            <span class="emotion-icon">😊</span>
+                            <span class="emotion-label">Smile</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill smile" id="smileBar" data-value="0">
+                                <span class="progress-text" id="smileValue">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="emotion-item">
+                        <div class="emotion-header">
+                            <span class="emotion-icon">😄</span>
+                            <span class="emotion-label">Happy</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill happy" id="happyBar" data-value="0">
+                                <span class="progress-text" id="happyValue">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="emotion-item">
+                        <div class="emotion-header">
+                            <span class="emotion-icon">😮</span>
+                            <span class="emotion-label">Surprised</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill surprised" id="surprisedBar" data-value="0">
+                                <span class="progress-text" id="surprisedValue">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="emotion-item">
+                        <div class="emotion-header">
+                            <span class="emotion-icon">😕</span>
+                            <span class="emotion-label">Confused</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill confused" id="confusedBar" data-value="0">
+                                <span class="progress-text" id="confusedValue">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="emotion-item">
+                        <div class="emotion-header">
+                            <span class="emotion-icon">🎯</span>
+                            <span class="emotion-label">Focused</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill focused" id="focusedBar" data-value="0">
+                                <span class="progress-text" id="focusedValue">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon session">⏱️</div>
+                <div class="stat-content">
+                    <p class="stat-label">Session Duration</p>
+                    <p class="stat-value" id="sessionTime">00:00</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon blink">👁️</div>
+                <div class="stat-content">
+                    <p class="stat-label">Blink Count</p>
+                    <p class="stat-value" id="blinkCount">0</p>
+                    <p class="stat-sub" id="blinkRate">0 blinks/min</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon sleep">😴</div>
+                <div class="stat-content">
+                    <p class="stat-label">Sleep Time</p>
+                    <p class="stat-value" id="sleepTime">0s</p>
+                    <p class="stat-sub" id="sleepPercentage">0% of session</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon engagement">📊</div>
+                <div class="stat-content">
+                    <p class="stat-label">Engagement Score</p>
+                    <p class="stat-value" id="engagementScore">0%</p>
+                    <p class="stat-sub" id="engagementStatus">Calculating...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="exportBtn">
+                <span class="btn-icon">📥</span>
+                Export Session Data
+            </button>
+            <button class="btn btn-secondary" id="viewReportBtn">
+                <span class="btn-icon">📊</span>
+                View Detailed Report
+            </button>
+            <button class="btn btn-danger" id="endSessionBtn">
+                <span class="btn-icon">⏹️</span>
+                End Session
+            </button>
+        </div>
     </div>
 
-    <div class="action-buttons">
-      <button class="btn btn-primary" id="exportBtn">Export Session Data</button>
-      <button class="btn btn-secondary" id="viewReportBtn">View Detailed Report</button>
-      <button class="btn btn-danger" id="endSessionBtn">End Session</button>
-    </div>
-  </div>
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduGaze - AI-Powered Student Engagement Analytics</p>
+        </div>
+    </footer>
 
-  <script src="emotion-tracker.js"></script>
-  <script>
-    const userName = sessionStorage.getItem('userName') || 'Student';
-    document.getElementById('userName').textContent = userName;
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection"></script>
+    <script src="emotion-tracker.js"></script>
+    <script>
+      const userName = sessionStorage.getItem('userName') || 'Student';
+      document.getElementById('userName').textContent = userName;
 
-    function logout() {
-      sessionStorage.clear();
-      window.location.href = 'index.html';
-    }
-
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      if (window.emotionTracker) {
-        window.emotionTracker.exportData();
+      function logout() {
+        sessionStorage.clear();
+        window.location.href = 'index.html';
       }
-    });
 
-    document.getElementById('viewReportBtn').addEventListener('click', () => {
-      if (window.emotionTracker) {
-        window.emotionTracker.saveSession();
-        window.location.href = 'report.html';
-      }
-    });
-
-    document.getElementById('endSessionBtn').addEventListener('click', () => {
-      if (confirm('Are you sure you want to end this session?')) {
+      document.getElementById('exportBtn').addEventListener('click', () => {
         if (window.emotionTracker) {
-          window.emotionTracker.stop();
+          window.emotionTracker.exportData();
         }
-        logout();
-      }
-    });
-  </script>
+      });
+
+      document.getElementById('viewReportBtn').addEventListener('click', () => {
+        if (window.emotionTracker) {
+          window.emotionTracker.saveSession();
+          window.location.href = 'report.html';
+        }
+      });
+
+      document.getElementById('endSessionBtn').addEventListener('click', () => {
+        if (confirm('Are you sure you want to end this session?')) {
+          if (window.emotionTracker) {
+            window.emotionTracker.stop();
+          }
+          logout();
+        }
+      });
+    </script>
 </body>
 </html>

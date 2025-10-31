@@ -1,533 +1,506 @@
-// EduGaze Emotion Tracking System
-// Integrated AI-powered emotion and engagement tracking
+// EduGaze Application - Enhanced with Sleep Tracking
 
-class EmotionTracker {
-  constructor() {
-    this.model = null;
-    this.video = document.getElementById('videoElement');
-    this.canvas = document.getElementById('canvas');
-    this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
-    
-    // Session tracking
-    this.sessionStartTime = Date.now();
-    this.frameCount = 0;
-    this.blinkCount = 0;
-    this.sleepTimeSeconds = 0;
-    this.isSleeping = false;
-    this.sleepStartTime = null;
-    
-    // Emotion tracking
-    this.emotions = {
-      smile: 0,
-      happy: 0,
-      surprised: 0,
-      confused: 0,
-      focused: 0
-    };
-    
-    // History for smoothing and reporting
-    this.emotionHistory = {
-      smile: [],
-      happy: [],
-      surprised: [],
-      confused: [],
-      focused: []
-    };
-    
-    // Baselines for adaptive detection
-    this.baselines = {
-      earBaseline: null,
-      mouthWidthBaseline: null,
-      eyeDistanceBaseline: null,
-      browDistanceBaseline: null
-    };
-    
-    // Sleep detection
-    this.earHistory = [];
-    this.sleepFrameCount = 0;
-    this.wakeFrameCount = 0;
-    
-    this.isRunning = false;
-    this.animationId = null;
-  }
+let video, model, detector;
+let isRunning = false;
+let sessionStartTime;
+let blinkCount = 0;
+let lastBlinkTime = 0;
 
-  async init() {
+// Sleep tracking variables
+let sleepTime = 0;
+let isSleeping = false;
+let sleepStartTime = null;
+let consecutiveSleepFrames = 0;
+const SLEEP_THRESHOLD_FRAMES = 45; // ~1.5 seconds at 30fps
+const WAKE_THRESHOLD_FRAMES = 15; // ~0.5 seconds to wake up
+
+let emotionHistory = {
+    smile: [],
+    happy: [],
+    surprised: [],
+    confused: [],
+    focused: []
+};
+
+// Smoothing buffer
+let smoothingBuffer = {
+    smile: [],
+    happy: [],
+    surprised: [],
+    confused: [],
+    focused: []
+};
+const SMOOTHING_WINDOW = 5;
+
+// Adaptive baseline tracking
+let baselineEAR = null;
+let baselineMouthRatio = null;
+let frameCount = 0;
+const BASELINE_FRAMES = 30;
+
+// EAR history for sleep detection
+let earHistory = [];
+const EAR_HISTORY_SIZE = 10;
+
+// Initialize the application
+async function init() {
     try {
-      // Show loading alert
-      const loadingAlert = document.getElementById('loadingAlert');
-      const readyAlert = document.getElementById('readyAlert');
-      
-      // Initialize webcam
-      await this.setupCamera();
-      
-      // Load face detection model
-      await this.loadModel();
-      
-      // Hide loading, show ready
-      if (loadingAlert) loadingAlert.style.display = 'none';
-      if (readyAlert) readyAlert.style.display = 'block';
-      
-      // Start tracking
-      this.start();
-      
-      console.log('✓ EduGaze initialized successfully');
+        video = document.getElementById('videoElement');
+        
+        // Setup webcam
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480 }
+        });
+        video.srcObject = stream;
+        
+        // Load face detection model
+        await tf.setBackend('webgl');
+        await tf.ready();
+        
+        model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
+        const detectorConfig = {
+            runtime: 'mediapipe',
+            solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh',
+            refineLandmarks: true
+        };
+        
+        detector = await faceLandmarksDetection.createDetector(model, detectorConfig);
+        
+        document.getElementById('loadingAlert').style.display = 'none';
+        document.getElementById('readyAlert').style.display = 'flex';
+        
+        setTimeout(() => {
+            document.getElementById('readyAlert').style.display = 'none';
+        }, 3000);
+        
+        sessionStartTime = Date.now();
+        isRunning = true;
+        
+        detectFace();
+        updateTimer();
+        setupEventListeners();
+        
     } catch (error) {
-      console.error('Initialization error:', error);
-      alert('Failed to initialize camera or AI model. Please check permissions.');
+        console.error('Initialization error:', error);
+        alert('Error accessing camera or loading model. Please ensure camera permissions are granted.');
     }
-  }
+}
 
-  async setupCamera() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error('Camera not supported');
-    }
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: 640, height: 480 },
-      audio: false
-    });
-
-    this.video.srcObject = stream;
+// Main detection loop
+async function detectFace() {
+    if (!isRunning) return;
     
-    return new Promise((resolve) => {
-      this.video.onloadedmetadata = () => {
-        resolve(this.video);
-      };
-    });
-  }
-
-  async loadModel() {
-    this.model = await faceLandmarksDetection.createDetector(
-      faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
-      {
-        runtime: 'tfjs',
-        maxFaces: 1,
-        refineLandmarks: true
-      }
-    );
-  }
-
-  start() {
-    if (this.isRunning) return;
-    this.isRunning = true;
-    this.sessionStartTime = Date.now();
-    this.detectFrame();
-  }
-
-  stop() {
-    this.isRunning = false;
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-    }
-    if (this.video.srcObject) {
-      this.video.srcObject.getTracks().forEach(track => track.stop());
-    }
-  }
-
-  async detectFrame() {
-    if (!this.isRunning) return;
-
-    const predictions = await this.model.estimateFaces(this.video);
-
-    if (predictions.length > 0) {
-      const face = predictions[0];
-      this.processFace(face);
-    }
-
-    this.frameCount++;
-    this.updateUI();
-
-    this.animationId = requestAnimationFrame(() => this.detectFrame());
-  }
-
-  processFace(face) {
-    const landmarks = face.keypoints;
-
-    // Calculate baselines (first 30 frames = 1 second)
-    if (this.frameCount < 30) {
-      this.calculateBaselines(landmarks);
-    }
-
-    // Detect sleep
-    this.detectSleep(landmarks);
-
-    // Detect emotions
-    this.detectEmotions(landmarks);
-
-    // Detect blinks
-    this.detectBlink(landmarks);
-  }
-
-  calculateBaselines(landmarks) {
-    // Calculate Eye Aspect Ratio baseline
-    const ear = this.calculateEAR(landmarks);
-    if (ear > 0) {
-      if (!this.baselines.earBaseline) {
-        this.baselines.earBaseline = ear;
-      } else {
-        this.baselines.earBaseline = (this.baselines.earBaseline * 0.9) + (ear * 0.1);
-      }
-    }
-
-    // Calculate mouth width baseline
-    const mouthWidth = this.getDistance(landmarks[61], landmarks[291]);
-    if (!this.baselines.mouthWidthBaseline) {
-      this.baselines.mouthWidthBaseline = mouthWidth;
-    } else {
-      this.baselines.mouthWidthBaseline = (this.baselines.mouthWidthBaseline * 0.9) + (mouthWidth * 0.1);
-    }
-
-    // Calculate eye distance baseline
-    const eyeDistance = this.getDistance(landmarks[33], landmarks[263]);
-    if (!this.baselines.eyeDistanceBaseline) {
-      this.baselines.eyeDistanceBaseline = eyeDistance;
-    }
-
-    // Calculate brow distance baseline
-    const browDistance = this.getDistance(landmarks[107], landmarks[336]);
-    if (!this.baselines.browDistanceBaseline) {
-      this.baselines.browDistanceBaseline = browDistance;
-    }
-  }
-
-  calculateEAR(landmarks) {
-    // Eye Aspect Ratio for sleep detection
-    // Left eye
-    const leftEyeVertical1 = this.getDistance(landmarks[159], landmarks[145]);
-    const leftEyeVertical2 = this.getDistance(landmarks[158], landmarks[153]);
-    const leftEyeHorizontal = this.getDistance(landmarks[33], landmarks[133]);
-    
-    // Right eye
-    const rightEyeVertical1 = this.getDistance(landmarks[386], landmarks[374]);
-    const rightEyeVertical2 = this.getDistance(landmarks[385], landmarks[380]);
-    const rightEyeHorizontal = this.getDistance(landmarks[263], landmarks[362]);
-    
-    const leftEAR = (leftEyeVertical1 + leftEyeVertical2) / (2.0 * leftEyeHorizontal);
-    const rightEAR = (rightEyeVertical1 + rightEyeVertical2) / (2.0 * rightEyeHorizontal);
-    
-    return (leftEAR + rightEAR) / 2.0;
-  }
-
-  detectSleep(landmarks) {
-    const ear = this.calculateEAR(landmarks);
-    
-    // Store EAR history
-    this.earHistory.push(ear);
-    if (this.earHistory.length > 10) {
-      this.earHistory.shift();
-    }
-
-    // Calculate average EAR
-    const avgEAR = this.earHistory.reduce((a, b) => a + b, 0) / this.earHistory.length;
-
-    // Adaptive threshold
-    const sleepThreshold = this.baselines.earBaseline ? this.baselines.earBaseline * 0.6 : 0.15;
-
-    if (avgEAR < sleepThreshold) {
-      this.sleepFrameCount++;
-      this.wakeFrameCount = 0;
-
-      // Confirm sleep after 1.5 seconds (45 frames at 30fps)
-      if (this.sleepFrameCount >= 45 && !this.isSleeping) {
-        this.isSleeping = true;
-        this.sleepStartTime = Date.now();
-        this.showSleepOverlay(true);
-      }
-    } else {
-      this.wakeFrameCount++;
-      this.sleepFrameCount = 0;
-
-      // Confirm wake after 0.5 seconds (15 frames)
-      if (this.wakeFrameCount >= 15 && this.isSleeping) {
-        this.isSleeping = false;
-        if (this.sleepStartTime) {
-          const sleepDuration = (Date.now() - this.sleepStartTime) / 1000;
-          this.sleepTimeSeconds += sleepDuration;
-          this.sleepStartTime = null;
+    try {
+        const predictions = await detector.estimateFaces(video);
+        
+        if (predictions.length > 0) {
+            const face = predictions[0];
+            const landmarks = face.keypoints;
+            
+            // Calculate emotions and sleep state
+            const emotions = calculateEmotions(landmarks);
+            const sleepState = detectSleep(landmarks);
+            
+            // Update sleep tracking
+            updateSleepTracking(sleepState);
+            
+            // Update UI
+            updateEmotionBars(emotions);
+            updateHistory(emotions);
+            updateEngagementScore(emotions);
+            
+            frameCount++;
+        } else {
+            // No face detected - might be sleeping or away
+            consecutiveSleepFrames++;
+            if (consecutiveSleepFrames > SLEEP_THRESHOLD_FRAMES) {
+                updateSleepTracking(true);
+            }
         }
-        this.showSleepOverlay(false);
-      }
+    } catch (error) {
+        console.error('Detection error:', error);
     }
+    
+    requestAnimationFrame(detectFace);
+}
 
-    // Update ongoing sleep time
-    if (this.isSleeping && this.sleepStartTime) {
-      const currentSleepTime = (Date.now() - this.sleepStartTime) / 1000;
-      const totalSleep = this.sleepTimeSeconds + currentSleepTime;
-      this.updateSleepDisplay(totalSleep);
+// Detect sleep based on EAR (Eye Aspect Ratio)
+function detectSleep(landmarks) {
+    const leftEye = [33, 160, 158, 133, 153, 144].map(i => landmarks[i]);
+    const rightEye = [362, 385, 387, 263, 373, 380].map(i => landmarks[i]);
+    
+    const earLeft = calculateEAR(leftEye);
+    const earRight = calculateEAR(rightEye);
+    const avgEAR = (earLeft + earRight) / 2;
+    
+    // Maintain EAR history
+    earHistory.push(avgEAR);
+    if (earHistory.length > EAR_HISTORY_SIZE) {
+        earHistory.shift();
+    }
+    
+    // Calculate average EAR over history
+    const avgEARHistory = earHistory.reduce((a, b) => a + b, 0) / earHistory.length;
+    
+    // Adaptive sleep threshold
+    const sleepThreshold = (baselineEAR || 0.25) * 0.6;
+    
+    // Check if eyes are consistently closed
+    const eyesClosed = avgEARHistory < sleepThreshold;
+    
+    if (eyesClosed) {
+        consecutiveSleepFrames++;
     } else {
-      this.updateSleepDisplay(this.sleepTimeSeconds);
-    }
-  }
-
-  detectEmotions(landmarks) {
-    // Get face metrics
-    const mouthWidth = this.getDistance(landmarks[61], landmarks[291]);
-    const mouthHeight = this.getDistance(landmarks[13], landmarks[14]);
-    const mouthCornerLeft = landmarks[61].y;
-    const mouthCornerRight = landmarks[291].y;
-    const mouthCenter = landmarks[13].y;
-    
-    const eyeLeft = this.getDistance(landmarks[159], landmarks[145]);
-    const eyeRight = this.getDistance(landmarks[386], landmarks[374]);
-    const eyeOpenness = (eyeLeft + eyeRight) / 2;
-    
-    const browLeft = landmarks[107].y;
-    const browRight = landmarks[336].y;
-    const eyeCenterY = (landmarks[33].y + landmarks[263].y) / 2;
-    const browDistance = eyeCenterY - ((browLeft + browRight) / 2);
-
-    // SMILE DETECTION (Enhanced)
-    let smileIntensity = 0;
-    if (this.baselines.mouthWidthBaseline) {
-      const widthRatio = mouthWidth / this.baselines.mouthWidthBaseline;
-      const cornerLift = (mouthCenter - ((mouthCornerLeft + mouthCornerRight) / 2)) / mouthHeight;
-      
-      if (widthRatio > 1.1 && cornerLift > 0.1) {
-        smileIntensity = Math.min(100, (widthRatio - 1) * 100 + cornerLift * 50);
-      }
-    }
-
-    // HAPPY DETECTION (Enhanced)
-    let happyIntensity = 0;
-    if (smileIntensity > 30 && eyeOpenness > 0.15) {
-      happyIntensity = Math.min(100, smileIntensity * 0.8);
-    }
-
-    // SURPRISED DETECTION (Enhanced)
-    let surprisedIntensity = 0;
-    const mouthOpenRatio = mouthHeight / mouthWidth;
-    const eyeWideOpen = eyeOpenness > 0.25;
-    if (mouthOpenRatio > 0.8 && eyeWideOpen) {
-      surprisedIntensity = Math.min(100, mouthOpenRatio * 80);
-    }
-
-    // CONFUSED DETECTION (Enhanced)
-    let confusedIntensity = 0;
-    if (this.baselines.browDistanceBaseline) {
-      const currentBrowDist = this.getDistance(landmarks[107], landmarks[336]);
-      const browFurrow = (this.baselines.browDistanceBaseline - currentBrowDist) / this.baselines.browDistanceBaseline;
-      const frown = mouthCornerLeft < mouthCenter && mouthCornerRight < mouthCenter;
-      
-      if (browFurrow > 0.05 || frown) {
-        confusedIntensity = Math.min(100, browFurrow * 300 + (frown ? 30 : 0));
-      }
-    }
-
-    // FOCUSED DETECTION (Enhanced)
-    let focusedIntensity = 0;
-    const isNotSleeping = !this.isSleeping;
-    const neutralExpression = smileIntensity < 20 && surprisedIntensity < 20 && confusedIntensity < 20;
-    const steadyGaze = eyeOpenness > 0.18 && eyeOpenness < 0.30;
-    
-    if (isNotSleeping && neutralExpression && steadyGaze) {
-      focusedIntensity = 70 + (steadyGaze ? 20 : 0);
-    }
-
-    // Smooth emotions
-    this.emotions.smile = this.smoothEmotion('smile', smileIntensity);
-    this.emotions.happy = this.smoothEmotion('happy', happyIntensity);
-    this.emotions.surprised = this.smoothEmotion('surprised', surprisedIntensity);
-    this.emotions.confused = this.smoothEmotion('confused', confusedIntensity);
-    this.emotions.focused = this.smoothEmotion('focused', focusedIntensity);
-
-    // Store in history
-    Object.keys(this.emotions).forEach(emotion => {
-      this.emotionHistory[emotion].push(this.emotions[emotion]);
-    });
-  }
-
-  smoothEmotion(emotionType, newValue) {
-    const history = this.emotionHistory[emotionType];
-    const alpha = 0.3; // Smoothing factor
-    
-    if (history.length === 0) {
-      return newValue;
+        // Reset if eyes open
+        if (consecutiveSleepFrames > 0) {
+            consecutiveSleepFrames = Math.max(0, consecutiveSleepFrames - 3);
+        }
     }
     
-    const lastValue = history[history.length - 1] || 0;
-    return (alpha * newValue) + ((1 - alpha) * lastValue);
-  }
+    return consecutiveSleepFrames > SLEEP_THRESHOLD_FRAMES;
+}
 
-  detectBlink(landmarks) {
-    const ear = this.calculateEAR(landmarks);
-    const blinkThreshold = this.baselines.earBaseline ? this.baselines.earBaseline * 0.7 : 0.2;
-    
-    if (ear < blinkThreshold && !this.wasBlinking) {
-      this.blinkCount++;
-      this.wasBlinking = true;
-    } else if (ear > blinkThreshold) {
-      this.wasBlinking = false;
-    }
-  }
-
-  getDistance(point1, point2) {
-    const dx = point1.x - point2.x;
-    const dy = point1.y - point2.y;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  showSleepOverlay(show) {
-    const overlay = document.getElementById('sleepOverlay');
-    if (overlay) {
-      if (show) {
-        overlay.classList.add('active');
-      } else {
-        overlay.classList.remove('active');
-      }
-    }
-  }
-
-  updateSleepDisplay(totalSleep) {
-    const sleepTimeEl = document.getElementById('sleepTime');
-    const sleepPercentageEl = document.getElementById('sleepPercentage');
-    
-    if (sleepTimeEl) {
-      sleepTimeEl.textContent = `${Math.round(totalSleep)}s`;
+// Update sleep tracking state
+function updateSleepTracking(currentlySleeping) {
+    if (currentlySleeping && !isSleeping) {
+        // Just fell asleep
+        isSleeping = true;
+        sleepStartTime = Date.now();
+        document.getElementById('sleepOverlay').style.display = 'flex';
+        document.getElementById('statusBadge').innerHTML = '<span class="status-dot" style="background: #EF4444;"></span> Sleeping';
+        document.getElementById('statusBadge').style.background = '#FEE2E2';
+        document.getElementById('statusBadge').style.color = '#991B1B';
+    } else if (!currentlySleeping && isSleeping && consecutiveSleepFrames < WAKE_THRESHOLD_FRAMES) {
+        // Just woke up
+        if (sleepStartTime) {
+            sleepTime += (Date.now() - sleepStartTime) / 1000;
+        }
+        isSleeping = false;
+        sleepStartTime = null;
+        document.getElementById('sleepOverlay').style.display = 'none';
+        document.getElementById('statusBadge').innerHTML = '<span class="status-dot"></span> Active';
+        document.getElementById('statusBadge').style.background = '#D1FAE5';
+        document.getElementById('statusBadge').style.color = '#065F46';
     }
     
-    if (sleepPercentageEl) {
-      const sessionDuration = (Date.now() - this.sessionStartTime) / 1000;
-      const sleepPercentage = sessionDuration > 0 ? (totalSleep / sessionDuration) * 100 : 0;
-      sleepPercentageEl.textContent = `${sleepPercentage.toFixed(1)}% of session`;
-    }
-  }
-
-  updateUI() {
-    // Update session time
-    const sessionTimeEl = document.getElementById('sessionTime');
-    if (sessionTimeEl) {
-      const duration = Math.floor((Date.now() - this.sessionStartTime) / 1000);
-      const minutes = Math.floor(duration / 60);
-      const seconds = duration % 60;
-      sessionTimeEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-
-    // Update blink count
-    const blinkCountEl = document.getElementById('blinkCount');
-    const blinkRateEl = document.getElementById('blinkRate');
-    if (blinkCountEl) {
-      blinkCountEl.textContent = this.blinkCount;
-    }
-    if (blinkRateEl) {
-      const duration = (Date.now() - this.sessionStartTime) / 1000 / 60; // minutes
-      const rate = duration > 0 ? (this.blinkCount / duration).toFixed(1) : 0;
-      blinkRateEl.textContent = `${rate} blinks/min`;
-    }
-
-    // Update emotion bars
-    Object.keys(this.emotions).forEach(emotion => {
-      const value = Math.round(this.emotions[emotion]);
-      const barEl = document.getElementById(`${emotion}Bar`);
-      const valueEl = document.getElementById(`${emotion}Value`);
-      
-      if (barEl) {
-        barEl.style.width = `${value}%`;
-      }
-      if (valueEl) {
-        valueEl.textContent = `${value}%`;
-      }
-    });
-
-    // Update engagement score
-    this.updateEngagementScore();
-  }
-
-  updateEngagementScore() {
-    const focused = this.emotions.focused;
-    const happy = this.emotions.happy;
-    const smile = this.emotions.smile;
-    const confused = this.emotions.confused;
-    const sleepPenalty = this.isSleeping ? 50 : 0;
-
-    let engagement = (focused * 0.6) + (happy * 0.3) + (smile * 0.1) - (confused * 0.3) - sleepPenalty;
-    engagement = Math.max(0, Math.min(100, engagement));
-
-    const engagementScoreEl = document.getElementById('engagementScore');
-    const engagementStatusEl = document.getElementById('engagementStatus');
-
-    if (engagementScoreEl) {
-      engagementScoreEl.textContent = `${Math.round(engagement)}%`;
-    }
-
-    if (engagementStatusEl) {
-      let status = '';
-      if (engagement >= 80) status = 'Highly Engaged';
-      else if (engagement >= 60) status = 'Engaged';
-      else if (engagement >= 40) status = 'Moderately Engaged';
-      else status = 'Low Engagement';
-      
-      engagementStatusEl.textContent = status;
-    }
-  }
-
-  getSessionData() {
-    const duration = Math.floor((Date.now() - this.sessionStartTime) / 1000);
-    const averages = {};
+    // Update sleep time display
+    const currentSleepTime = isSleeping && sleepStartTime 
+        ? sleepTime + (Date.now() - sleepStartTime) / 1000 
+        : sleepTime;
     
-    Object.keys(this.emotionHistory).forEach(emotion => {
-      const history = this.emotionHistory[emotion];
-      if (history.length > 0) {
-        const sum = history.reduce((a, b) => a + b, 0);
-        averages[emotion] = (sum / history.length).toFixed(1);
-      } else {
-        averages[emotion] = 0;
-      }
-    });
+    document.getElementById('sleepTime').textContent = formatTime(currentSleepTime);
+    
+    // Calculate sleep percentage
+    const sessionDuration = (Date.now() - sessionStartTime) / 1000;
+    const sleepPercentage = (currentSleepTime / sessionDuration * 100).toFixed(1);
+    document.getElementById('sleepPercentage').textContent = `${sleepPercentage}% of session`;
+}
 
-    const blinkRate = (this.blinkCount / (duration / 60)).toFixed(1);
-    const sleepPercentage = ((this.sleepTimeSeconds / duration) * 100).toFixed(1);
-
-    // Calculate engagement score
-    const engagement = (parseFloat(averages.focused) * 0.6) + 
-                      (parseFloat(averages.happy) * 0.3) + 
-                      (parseFloat(averages.smile) * 0.1) - 
-                      (parseFloat(averages.confused) * 0.3);
-
+// Improved emotion calculation
+function calculateEmotions(landmarks) {
+    const leftEye = [33, 160, 158, 133, 153, 144].map(i => landmarks[i]);
+    const rightEye = [362, 385, 387, 263, 373, 380].map(i => landmarks[i]);
+    
+    const mouthLeft = landmarks[61];
+    const mouthRight = landmarks[291];
+    const mouthTop = landmarks[13];
+    const mouthBottom = landmarks[14];
+    
+    const leftBrowInner = landmarks[70];
+    const rightBrowInner = landmarks[300];
+    const leftBrowOuter = landmarks[105];
+    const rightBrowOuter = landmarks[334];
+    
+    // Calculate EAR
+    const earLeft = calculateEAR(leftEye);
+    const earRight = calculateEAR(rightEye);
+    const avgEAR = (earLeft + earRight) / 2;
+    
+    // Adaptive baseline
+    if (frameCount < BASELINE_FRAMES) {
+        if (!baselineEAR) baselineEAR = avgEAR;
+        else baselineEAR = baselineEAR * 0.95 + avgEAR * 0.05;
+    }
+    
+    // Blink detection
+    const blinkThreshold = (baselineEAR || 0.25) * 0.7;
+    if (avgEAR < blinkThreshold && Date.now() - lastBlinkTime > 300) {
+        blinkCount++;
+        lastBlinkTime = Date.now();
+        document.getElementById('blinkCount').textContent = blinkCount;
+        updateBlinkRate();
+    }
+    
+    // Mouth metrics
+    const mouthWidth = distance(mouthLeft, mouthRight);
+    const mouthHeight = distance(mouthTop, mouthBottom);
+    const mouthRatio = mouthHeight / mouthWidth;
+    
+    if (frameCount < BASELINE_FRAMES) {
+        if (!baselineMouthRatio) baselineMouthRatio = mouthRatio;
+        else baselineMouthRatio = baselineMouthRatio * 0.95 + mouthRatio * 0.05;
+    }
+    
+    // Mouth corner lift
+    const leftCornerY = mouthLeft.y;
+    const rightCornerY = mouthRight.y;
+    const centerY = (mouthTop.y + mouthBottom.y) / 2;
+    const cornerLift = (centerY - leftCornerY + centerY - rightCornerY) / 2;
+    const cornerLiftRatio = cornerLift / mouthWidth;
+    
+    // Eyebrow metrics
+    const leftBrowHeight = leftBrowOuter.y - leftEye[0].y;
+    const rightBrowHeight = rightBrowOuter.y - rightEye[0].y;
+    const avgBrowHeight = (leftBrowHeight + rightBrowHeight) / 2;
+    
+    // SMILE
+    let smileScore = 0;
+    if (cornerLiftRatio > 0.02) {
+        smileScore = Math.min(100, (cornerLiftRatio / 0.08) * 100);
+        const widthFactor = baselineMouthRatio ? (baselineMouthRatio / mouthRatio) : 1;
+        if (widthFactor > 1.1) {
+            smileScore *= Math.min(1.5, widthFactor);
+        }
+    }
+    smileScore = clamp(smileScore, 0, 100);
+    
+    // HAPPY
+    let happyScore = 0;
+    if (smileScore > 30) {
+        const eyeRelaxation = baselineEAR ? (avgEAR / baselineEAR) : 1;
+        if (eyeRelaxation > 0.85 && eyeRelaxation < 1.15) {
+            happyScore = smileScore * 0.9;
+        }
+    }
+    happyScore = clamp(happyScore, 0, 100);
+    
+    // SURPRISED
+    let surprisedScore = 0;
+    const mouthOpenness = baselineMouthRatio ? (mouthRatio / baselineMouthRatio) : 1;
+    const eyeOpenness = baselineEAR ? (avgEAR / baselineEAR) : 1;
+    
+    if (mouthOpenness > 1.5 || eyeOpenness > 1.15) {
+        surprisedScore = (mouthOpenness - 1) * 50 + (eyeOpenness - 1) * 200;
+        surprisedScore = Math.min(100, surprisedScore);
+    }
+    surprisedScore = clamp(surprisedScore, 0, 100);
+    
+    // CONFUSED
+    let confusedScore = 0;
+    const browFurrow = avgBrowHeight > 0 ? Math.min(1, avgBrowHeight / 15) : 0;
+    const mouthAsymmetry = Math.abs(leftCornerY - rightCornerY);
+    const frownFactor = cornerLiftRatio < -0.01 ? Math.abs(cornerLiftRatio) * 100 : 0;
+    
+    confusedScore = (browFurrow * 60) + (frownFactor * 0.8) + (mouthAsymmetry * 30);
+    confusedScore = clamp(confusedScore, 0, 100);
+    
+    // FOCUSED
+    let focusedScore = 0;
+    const totalExpression = smileScore + happyScore + surprisedScore + confusedScore;
+    
+    if (totalExpression < 80 && !isSleeping) {
+        const eyeFocus = baselineEAR ? clamp((avgEAR / baselineEAR) * 100, 70, 100) : 80;
+        const steadiness = mouthRatio < (baselineMouthRatio || 0.3) * 1.3 ? 1 : 0.5;
+        focusedScore = ((100 - totalExpression * 0.5) * steadiness * (eyeFocus / 100));
+    }
+    focusedScore = clamp(focusedScore, 0, 100);
+    
     return {
-      timestamp: new Date().toISOString(),
-      duration_seconds: duration,
-      blink_count: this.blinkCount,
-      blink_rate_per_min: blinkRate,
-      sleep_time_seconds: Math.round(this.sleepTimeSeconds),
-      sleep_percentage: sleepPercentage,
-      engagement_score: Math.max(0, Math.min(100, engagement)).toFixed(1),
-      emotions_average: averages,
-      emotion_timeline: this.emotionHistory
+        smile: smileScore,
+        happy: happyScore,
+        surprised: surprisedScore,
+        confused: confusedScore,
+        focused: focusedScore
     };
-  }
+}
 
-  saveSession() {
-    const data = this.getSessionData();
-    localStorage.setItem('edugazeSession', JSON.stringify(data));
-    console.log('Session saved to localStorage');
-  }
+// Calculate Eye Aspect Ratio
+function calculateEAR(eyePoints) {
+    const A = distance(eyePoints[1], eyePoints[5]);
+    const B = distance(eyePoints[2], eyePoints[4]);
+    const C = distance(eyePoints[0], eyePoints[3]);
+    return (A + B) / (2.0 * C);
+}
 
-  exportData() {
-    const data = this.getSessionData();
-    const dataStr = JSON.stringify(data, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+// Distance between two points
+function distance(p1, p2) {
+    return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+}
+
+// Clamp value
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
+// Smooth emotion values
+function smoothValue(emotion, value) {
+    if (!smoothingBuffer[emotion]) {
+        smoothingBuffer[emotion] = [];
+    }
     
+    smoothingBuffer[emotion].push(value);
+    if (smoothingBuffer[emotion].length > SMOOTHING_WINDOW) {
+        smoothingBuffer[emotion].shift();
+    }
+    
+    const sum = smoothingBuffer[emotion].reduce((a, b) => a + b, 0);
+    return sum / smoothingBuffer[emotion].length;
+}
+
+// Update emotion bars
+function updateEmotionBars(emotions) {
+    for (const [emotion, value] of Object.entries(emotions)) {
+        const smoothedValue = smoothValue(emotion, value);
+        const bar = document.getElementById(`${emotion}Bar`);
+        const text = document.getElementById(`${emotion}Value`);
+        
+        if (bar && text) {
+            bar.style.width = `${smoothedValue}%`;
+            bar.setAttribute('data-value', smoothedValue);
+            text.textContent = `${Math.round(smoothedValue)}%`;
+        }
+    }
+}
+
+// Update emotion history
+function updateHistory(emotions) {
+    for (const [emotion, value] of Object.entries(emotions)) {
+        if (!emotionHistory[emotion]) {
+            emotionHistory[emotion] = [];
+        }
+        emotionHistory[emotion].push(value);
+        
+        if (emotionHistory[emotion].length > 1000) {
+            emotionHistory[emotion].shift();
+        }
+    }
+}
+
+// Calculate and update engagement score
+function updateEngagementScore(emotions) {
+    // Engagement = focused + happy - (confused * 0.5) - sleep penalty
+    const sleepPenalty = isSleeping ? 50 : 0;
+    const engagementScore = Math.max(0, 
+        emotions.focused * 0.6 + 
+        emotions.happy * 0.3 + 
+        emotions.smile * 0.1 - 
+        emotions.confused * 0.3 - 
+        sleepPenalty
+    );
+    
+    const roundedScore = Math.round(engagementScore);
+    document.getElementById('engagementScore').textContent = `${roundedScore}%`;
+    
+    let status = '';
+    if (isSleeping) {
+        status = 'Sleeping';
+    } else if (roundedScore >= 80) {
+        status = 'Highly Engaged';
+    } else if (roundedScore >= 60) {
+        status = 'Engaged';
+    } else if (roundedScore >= 40) {
+        status = 'Moderately Engaged';
+    } else {
+        status = 'Low Engagement';
+    }
+    
+    document.getElementById('engagementStatus').textContent = status;
+}
+
+// Update blink rate
+function updateBlinkRate() {
+    const elapsedMinutes = (Date.now() - sessionStartTime) / 60000;
+    const blinkRate = elapsedMinutes > 0 ? (blinkCount / elapsedMinutes).toFixed(1) : 0;
+    document.getElementById('blinkRate').textContent = `${blinkRate} blinks/min`;
+}
+
+// Update timer
+function updateTimer() {
+    if (!isRunning) return;
+    
+    const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+    document.getElementById('sessionTime').textContent = formatTime(elapsed);
+    
+    setTimeout(updateTimer, 1000);
+}
+
+// Format time as MM:SS
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+// Export session data
+function exportData() {
+    const sessionDuration = (Date.now() - sessionStartTime) / 1000;
+    const currentSleepTime = isSleeping && sleepStartTime 
+        ? sleepTime + (Date.now() - sleepStartTime) / 1000 
+        : sleepTime;
+    
+    const sessionData = {
+        timestamp: new Date().toISOString(),
+        duration_seconds: Math.round(sessionDuration),
+        blink_count: blinkCount,
+        blink_rate_per_min: (blinkCount / (sessionDuration / 60)).toFixed(2),
+        sleep_time_seconds: Math.round(currentSleepTime),
+        sleep_percentage: ((currentSleepTime / sessionDuration) * 100).toFixed(2),
+        emotions_average: {},
+        emotion_timeline: emotionHistory
+    };
+    
+    for (const [emotion, values] of Object.entries(emotionHistory)) {
+        if (values.length > 0) {
+            const avg = values.reduce((a, b) => a + b, 0) / values.length;
+            sessionData.emotions_average[emotion] = Math.round(avg * 100) / 100;
+        }
+    }
+    
+    // Calculate engagement score
+    const avgFocused = sessionData.emotions_average.focused || 0;
+    const avgHappy = sessionData.emotions_average.happy || 0;
+    const avgConfused = sessionData.emotions_average.confused || 0;
+    const sleepPenalty = (currentSleepTime / sessionDuration) * 50;
+    
+    sessionData.engagement_score = Math.max(0, 
+        avgFocused * 0.6 + avgHappy * 0.3 - avgConfused * 0.3 - sleepPenalty
+    ).toFixed(2);
+    
+    // Save to localStorage for report page
+    localStorage.setItem('edugazeSession', JSON.stringify(sessionData));
+    
+    // Download as JSON
+    const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `edugaze-session-${Date.now()}.json`;
+    a.download = `edugaze_session_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    document.getElementById('exportBtn').addEventListener('click', exportData);
     
-    alert('Session data exported successfully!');
-  }
+    document.getElementById('viewReportBtn').addEventListener('click', () => {
+        exportData(); // Save to localStorage
+        window.location.href = 'report.html';
+    });
+    
+    document.getElementById('endSessionBtn').addEventListener('click', () => {
+        if (confirm('Are you sure you want to end this session?')) {
+            exportData();
+            isRunning = false;
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            alert('Session ended. Data has been saved.');
+        }
+    });
 }
 
-// Initialize tracker when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initTracker);
-} else {
-  initTracker();
-}
-
-function initTracker() {
-  window.emotionTracker = new EmotionTracker();
-  window.emotionTracker.init();
-}
+// Start the application
+window.addEventListener('load', init);
