@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EduGaze - Educational Engagement Analytics</title>
+  <title>EduGaze - AI Student Engagement Monitoring</title>
   <style>
     * {
       margin: 0;
@@ -13,309 +13,565 @@
     }
 
     body {
-      height: 100vh;
-      background: radial-gradient(circle at 10% 20%, #0d1117 0%, #1a1f29 90%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-
-    .login-container {
-      position: relative;
-      width: 100%;
-      max-width: 380px;
-      padding: 40px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      text-align: center;
-      animation: fadeIn 0.8s ease forwards;
-    }
-
-    h2 {
+      background: linear-gradient(135deg, #0d1117 0%, #1a1f29 100%);
       color: #fff;
-      font-size: 2rem;
-      margin-bottom: 10px;
-      letter-spacing: 1px;
+      overflow-x: hidden;
+    }
+
+    /* Navigation */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 60px;
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-logo {
+      font-size: 1.8rem;
       font-weight: 700;
+      background: linear-gradient(135deg, #007bff, #00c6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .subtitle {
+    .nav-links {
+      display: flex;
+      gap: 40px;
+      list-style: none;
+    }
+
+    .nav-links a {
       color: #aaa;
-      font-size: 0.9rem;
-      margin-bottom: 30px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-weight: 500;
     }
 
-    .form-group {
+    .nav-links a:hover {
+      color: #00d4ff;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 123, 255, 0.5);
+      background: transparent;
+      color: #00d4ff;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn:hover {
+      background: rgba(0, 123, 255, 0.1);
+      border-color: #00d4ff;
+    }
+
+    .nav-btn.primary {
+      background: linear-gradient(135deg, #007bff, #00c6ff);
+      border: none;
+      color: #fff;
+    }
+
+    .nav-btn.primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
+    }
+
+    /* Hero Section */
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 80px 60px;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #fff, #00d4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: slideDown 1s ease;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: #aaa;
+      margin-bottom: 40px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+      animation: slideDown 1s ease 0.2s backwards;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 80px;
+      animation: slideDown 1s ease 0.4s backwards;
+    }
+
+    .btn {
+      padding: 15px 40px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #007bff, #00c6ff);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 123, 255, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(0, 123, 255, 0.1);
+      color: #00d4ff;
+      border: 2px solid rgba(0, 123, 255, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(0, 123, 255, 0.2);
+      border-color: #00d4ff;
+    }
+
+    .hero-visual {
+      max-width: 500px;
+      margin: 0 auto;
+      background: rgba(0, 123, 255, 0.1);
+      border: 1px solid rgba(0, 123, 255, 0.3);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .hero-visual svg {
+      width: 100%;
+      height: auto;
+    }
+
+    /* Background Glows */
+    .glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.3;
+      z-index: 0;
+    }
+
+    .glow-1 { width: 400px; height: 400px; background: #007bff; top: 10%; left: 5%; }
+    .glow-2 { width: 300px; height: 300px; background: #8e44ad; bottom: 20%; right: 10%; }
+
+    /* Features Section */
+    .features {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 100px 60px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-bottom: 80px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 40px 30px;
+      text-align: center;
+      transition: all 0.4s ease;
+      cursor: pointer;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-10px);
+      background: rgba(0, 123, 255, 0.1);
+      border-color: rgba(0, 123, 255, 0.5);
+      box-shadow: 0 15px 40px rgba(0, 123, 255, 0.2);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
       margin-bottom: 20px;
     }
 
-    label {
-      display: block;
-      color: #ddd;
-      font-size: 0.85rem;
-      margin-bottom: 8px;
-      text-align: left;
-      font-weight: 500;
+    .feature-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
     }
 
-    input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      outline: none;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      font-size: 1rem;
-      text-align: center;
-      transition: all 0.3s ease;
-    }
-
-    input:focus {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: #007bff;
-      box-shadow: 0 0 15px rgba(0, 123, 255, 0.2);
-    }
-
-    input::placeholder {
-      color: rgba(255, 255, 255, 0.5);
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #007bff, #00c6ff);
-      color: #fff;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    button:hover:not(:disabled) {
-      transform: translateY(-3px);
-      background: linear-gradient(135deg, #0056ff, #00aaff);
-      box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
-    }
-
-    button:active:not(:disabled) {
-      transform: translateY(-1px);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .message {
-      font-size: 0.9rem;
-      margin-top: 15px;
-      padding: 10px;
-      border-radius: 8px;
-      animation: slideDown 0.3s ease;
-      min-height: 20px;
-    }
-
-    .message.error {
-      color: #ff6b6b;
-      background: rgba(255, 107, 107, 0.1);
-      border: 1px solid rgba(255, 107, 107, 0.3);
-    }
-
-    .message.success {
-      color: #51cf66;
-      background: rgba(81, 207, 102, 0.1);
-      border: 1px solid rgba(81, 207, 102, 0.3);
-    }
-
-    .demo-codes {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .demo-title {
+    .feature-card p {
       color: #aaa;
-      font-size: 0.8rem;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-size: 0.95rem;
+      line-height: 1.6;
     }
 
-    .code-grid {
+    /* How It Works */
+    .how-it-works {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 100px 60px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .steps-container {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 40px;
+      margin-bottom: 80px;
     }
 
-    .code-btn {
-      padding: 10px;
-      background: rgba(0, 123, 255, 0.15);
-      border: 1px solid rgba(0, 123, 255, 0.3);
-      border-radius: 8px;
-      color: #00d4ff;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-weight: 500;
+    .step {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(0, 123, 255, 0.2);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      position: relative;
     }
 
-    .code-btn:hover {
-      background: rgba(0, 123, 255, 0.25);
-      border-color: rgba(0, 123, 255, 0.6);
-    }
-
-    .glow {
+    .step::before {
+      content: attr(data-step);
       position: absolute;
-      width: 200px;
-      height: 200px;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #007bff, #00c6ff);
       border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.5;
-      z-index: -1;
-      animation: move 6s infinite alternate ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.5rem;
     }
 
-    .glow.blue { background: #007bff; top: -60px; left: -60px; }
-    .glow.purple { background: #8e44ad; bottom: -60px; right: -60px; }
+    .step h3 {
+      font-size: 1.3rem;
+      margin-top: 20px;
+      margin-bottom: 15px;
+    }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+    .step p {
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 80px 60px;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .cta-section h2 {
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+    }
+
+    .cta-section p {
+      font-size: 1.1rem;
+      color: #aaa;
+      margin-bottom: 40px;
+    }
+
+    /* Footer */
+    footer {
+      background: rgba(255, 255, 255, 0.02);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 60px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-section h4 {
+      margin-bottom: 20px;
+    }
+
+    .footer-section ul {
+      list-style: none;
+    }
+
+    .footer-section a {
+      color: #aaa;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .footer-section a:hover {
+      color: #00d4ff;
+      transform: translateX(5px);
+    }
+
+    .social-icons {
+      display: flex;
+      gap: 20px;
+      font-size: 1.5rem;
+    }
+
+    .social-icons a {
+      color: #aaa;
+      transition: all 0.3s ease;
+      display: inline;
+    }
+
+    .social-icons a:hover {
+      color: #00d4ff;
+      transform: scale(1.2);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 30px;
+      text-align: center;
+      color: #666;
     }
 
     @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
+      from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes move {
-      from { transform: translate(0, 0); }
-      to { transform: translate(30px, -30px); }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
     }
 
-    @media (max-width: 480px) {
-      .login-container {
-        width: 90%;
-        padding: 30px;
+    @media (max-width: 768px) {
+      nav {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 20px;
       }
 
-      h2 {
-        font-size: 1.6rem;
+      .nav-links {
+        gap: 20px;
       }
 
-      .code-grid {
+      .hero {
+        padding: 40px 20px;
+      }
+
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .features, .how-it-works, .cta-section {
+        padding: 60px 20px;
+      }
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .footer-content {
         grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <div class="glow blue"></div>
-  <div class="glow purple"></div>
+  <!-- Background Glows -->
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
 
-  <div class="login-container">
-    <h2>EduGaze</h2>
-    <p class="subtitle">Educational Management Portal</p>
-    
-    <form id="loginForm" onsubmit="handleLogin(event)">
-      <div class="form-group">
-        <label for="codeInput">Access Code</label>
-        <input 
-          type="text" 
-          id="codeInput" 
-          placeholder="Enter your access code..."
-          autocomplete="off"
-          maxlength="20"
-          required
-        />
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-logo">🎓 EduGaze</div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="nav-buttons">
+      <button class="nav-btn" onclick="window.location.href='login.html'">Login</button>
+      <button class="nav-btn primary" onclick="window.location.href='index.html'">Try Demo</button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Understand Student Engagement — Instantly.</h1>
+    <p>EduGaze uses AI to analyze emotions, focus, and participation in real-time — giving schools powerful insights into classroom engagement.</p>
+    <div class="hero-buttons">
+      <button class="btn btn-primary" onclick="window.location.href='index.html'">Try Demo</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('contact').scrollIntoView({behavior: 'smooth'})">Learn More</button>
+    </div>
+    <div class="hero-visual">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#007bff;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#00c6ff;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect x="40" y="30" width="120" height="100" rx="20" fill="url(#grad)" opacity="0.2" stroke="url(#grad)" stroke-width="2"/>
+        <circle cx="70" cy="65" r="8" fill="url(#grad)"/>
+        <circle cx="130" cy="65" r="8" fill="url(#grad)"/>
+        <path d="M 80 90 Q 100 100 120 90" stroke="url(#grad)" stroke-width="2" fill="none"/>
+        <g opacity="0.5">
+          <circle cx="100" cy="100" r="60" fill="none" stroke="url(#grad)" stroke-width="1" stroke-dasharray="5,5"/>
+          <circle cx="100" cy="100" r="80" fill="none" stroke="url(#grad)" stroke-width="1" stroke-dasharray="5,5" opacity="0.5"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <h2 class="section-title">Powerful Features for Real Insights</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Focus Detection</h3>
+        <p>Detects when students lose attention and provides real-time alerts to keep the class engaged.</p>
       </div>
-      <button type="submit" id="loginBtn">Login</button>
-    </form>
-    
-    <div id="message" class="message" style="display: none;"></div>
-
-    <div class="demo-codes">
-      <div class="demo-title">Demo Codes</div>
-      <div class="code-grid">
-        <button type="button" class="code-btn" onclick="quickLogin('TEACHER1')">TEACHER1</button>
-        <button type="button" class="code-btn" onclick="quickLogin('STUDENT1')">STUDENT1</button>
-        <button type="button" class="code-btn" onclick="quickLogin('PARENT1')">PARENT1</button>
-        <button type="button" class="code-btn" onclick="quickLogin('ADMIN1')">ADMIN1</button>
+      <div class="feature-card">
+        <div class="feature-icon">😊</div>
+        <h3>Emotion Tracking</h3>
+        <p>Monitors happiness, confusion, and participation levels throughout the class session.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h3>Talking Time</h3>
+        <p>Measures active speaking and engagement, ensuring balanced class participation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💤</div>
+        <h3>Sleep Detection</h3>
+        <p>Alerts if a student is inactive or appears to be disengaged for extended periods.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <script>
-    const roles = {
-      "TEACHER1": { name: "Teacher Dashboard", page: "teacher.html" },
-      "STUDENT1": { name: "Student Dashboard", page: "student.html" },
-      "PARENT1": { name: "Parent Dashboard", page: "parent.html" },
-      "ADMIN1": { name: "Administration Panel", page: "administration.html" }
-    };
+  <!-- How It Works -->
+  <section class="how-it-works" id="how-it-works">
+    <h2 class="section-title">How EduGaze Works</h2>
+    <div class="steps-container">
+      <div class="step" data-step="1">
+        <h3>📷 Camera Capture</h3>
+        <p>High-quality classroom camera captures student behavior and facial expressions in real-time.</p>
+      </div>
+      <div class="step" data-step="2">
+        <h3>🤖 AI Analysis</h3>
+        <p>Advanced AI algorithms analyze focus, emotions, and activity patterns from video data.</p>
+      </div>
+      <div class="step" data-step="3">
+        <h3>📊 Report Generation</h3>
+        <p>Detailed engagement reports are automatically generated and sent to all stakeholders.</p>
+      </div>
+    </div>
+    <div class="cta-section" id="contact">
+      <h2>Bring Real Data Into Classroom Engagement</h2>
+      <p>Start your pilot with EduGaze today and transform how you understand student engagement.</p>
+      <button class="btn btn-primary" onclick="window.location.href='index.html'">Request Demo</button>
+    </div>
+  </section>
 
-    const messageEl = document.getElementById("message");
-    const loginBtn = document.getElementById("loginBtn");
-
-    function showMessage(text, type) {
-      messageEl.textContent = text;
-      messageEl.className = `message ${type}`;
-      messageEl.style.display = "block";
-    }
-
-    function hideMessage() {
-      messageEl.style.display = "none";
-    }
-
-    function handleLogin(event) {
-      event.preventDefault();
-      const code = document.getElementById("codeInput").value.trim().toUpperCase();
-
-      if (!code) {
-        showMessage("Please enter an access code", "error");
-        return;
-      }
-
-      if (roles[code]) {
-        loginBtn.disabled = true;
-        loginBtn.textContent = "Logging in...";
-        
-        showMessage(`Welcome! Redirecting to ${roles[code].name}...`, "success");
-        
-        sessionStorage.setItem('userRole', code);
-        sessionStorage.setItem('userName', code === 'TEACHER1' ? 'Dr. Ahmed Hassan' : 
-                                           code === 'STUDENT1' ? 'Omar Al-Mazrouei' :
-                                           code === 'PARENT1' ? 'Fatima Al-Mansouri' : 'Administrator');
-        
-        setTimeout(() => {
-          window.location.href = roles[code].page;
-        }, 1200);
-      } else {
-        showMessage("Invalid access code. Please try again.", "error");
-        document.getElementById("codeInput").focus();
-      }
-    }
-
-    function quickLogin(code) {
-      document.getElementById("codeInput").value = code;
-      handleLogin(new Event('submit'));
-    }
-
-    document.getElementById("codeInput").addEventListener("input", hideMessage);
-
-    document.getElementById("codeInput").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        handleLogin(e);
-      }
-    });
-  </script>
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>🎓 EduGaze</h4>
+        <p style="color: #aaa; line-height: 1.6;">AI-powered student engagement monitoring system for modern classrooms.</p>
+        <div class="social-icons" style="margin-top: 20px;">
+          <a href="#" title="LinkedIn">💼</a>
+          <a href="#" title="GitHub">🐙</a>
+          <a href="#" title="YouTube">▶️</a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Documentation</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+          <li><a href="#">GDPR</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 EduGaze. All rights reserved. | Empowering Education Through AI</p>
+    </div>
+  </footer>
 </body>
 </html>
