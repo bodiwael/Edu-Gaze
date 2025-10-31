@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduGaze - Educational Engagement Analytics</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: radial-gradient(circle at 10% 20%, #0d1117 0%, #1a1f29 90%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .login-container {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      animation: fadeIn 0.8s ease forwards;
+    }
+
+    h2 {
+      color: #fff;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: #aaa;
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      color: #ddd;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      outline: none;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    input:focus {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #007bff;
+      box-shadow: 0 0 15px rgba(0, 123, 255, 0.2);
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #007bff, #00c6ff);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-3px);
+      background: linear-gradient(135deg, #0056ff, #00aaff);
+      box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      font-size: 0.9rem;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      animation: slideDown 0.3s ease;
+      min-height: 20px;
+    }
+
+    .message.error {
+      color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+    }
+
+    .message.success {
+      color: #51cf66;
+      background: rgba(81, 207, 102, 0.1);
+      border: 1px solid rgba(81, 207, 102, 0.3);
+    }
+
+    .demo-codes {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .demo-title {
+      color: #aaa;
+      font-size: 0.8rem;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .code-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .code-btn {
+      padding: 10px;
+      background: rgba(0, 123, 255, 0.15);
+      border: 1px solid rgba(0, 123, 255, 0.3);
+      border-radius: 8px;
+      color: #00d4ff;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+
+    .code-btn:hover {
+      background: rgba(0, 123, 255, 0.25);
+      border-color: rgba(0, 123, 255, 0.6);
+    }
+
+    .glow {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.5;
+      z-index: -1;
+      animation: move 6s infinite alternate ease-in-out;
+    }
+
+    .glow.blue { background: #007bff; top: -60px; left: -60px; }
+    .glow.purple { background: #8e44ad; bottom: -60px; right: -60px; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes move {
+      from { transform: translate(0, 0); }
+      to { transform: translate(30px, -30px); }
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        width: 90%;
+        padding: 30px;
+      }
+
+      h2 {
+        font-size: 1.6rem;
+      }
+
+      .code-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow blue"></div>
+  <div class="glow purple"></div>
+
+  <div class="login-container">
+    <h2>EduGaze</h2>
+    <p class="subtitle">Educational Management Portal</p>
+    
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="codeInput">Access Code</label>
+        <input 
+          type="text" 
+          id="codeInput" 
+          placeholder="Enter your access code..."
+          autocomplete="off"
+          maxlength="20"
+          required
+        />
+      </div>
+      <button type="submit" id="loginBtn">Login</button>
+    </form>
+    
+    <div id="message" class="message" style="display: none;"></div>
+
+    <div class="demo-codes">
+      <div class="demo-title">Demo Codes</div>
+      <div class="code-grid">
+        <button type="button" class="code-btn" onclick="quickLogin('TEACHER1')">TEACHER1</button>
+        <button type="button" class="code-btn" onclick="quickLogin('STUDENT1')">STUDENT1</button>
+        <button type="button" class="code-btn" onclick="quickLogin('PARENT1')">PARENT1</button>
+        <button type="button" class="code-btn" onclick="quickLogin('ADMIN1')">ADMIN1</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const roles = {
+      "TEACHER1": { name: "Teacher Dashboard", page: "teacher.html" },
+      "STUDENT1": { name: "Student Dashboard", page: "student.html" },
+      "PARENT1": { name: "Parent Dashboard", page: "parent.html" },
+      "ADMIN1": { name: "Administration Panel", page: "administration.html" }
+    };
+
+    const messageEl = document.getElementById("message");
+    const loginBtn = document.getElementById("loginBtn");
+
+    function showMessage(text, type) {
+      messageEl.textContent = text;
+      messageEl.className = `message ${type}`;
+      messageEl.style.display = "block";
+    }
+
+    function hideMessage() {
+      messageEl.style.display = "none";
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+      const code = document.getElementById("codeInput").value.trim().toUpperCase();
+
+      if (!code) {
+        showMessage("Please enter an access code", "error");
+        return;
+      }
+
+      if (roles[code]) {
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Logging in...";
+        
+        showMessage(`Welcome! Redirecting to ${roles[code].name}...`, "success");
+        
+        sessionStorage.setItem('userRole', code);
+        sessionStorage.setItem('userName', code === 'TEACHER1' ? 'Dr. Ahmed Hassan' : 
+                                           code === 'STUDENT1' ? 'Omar Al-Mazrouei' :
+                                           code === 'PARENT1' ? 'Fatima Al-Mansouri' : 'Administrator');
+        
+        setTimeout(() => {
+          window.location.href = roles[code].page;
+        }, 1200);
+      } else {
+        showMessage("Invalid access code. Please try again.", "error");
+        document.getElementById("codeInput").focus();
+      }
+    }
+
+    function quickLogin(code) {
+      document.getElementById("codeInput").value = code;
+      handleLogin(new Event('submit'));
+    }
+
+    document.getElementById("codeInput").addEventListener("input", hideMessage);
+
+    document.getElementById("codeInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        handleLogin(e);
+      }
+    });
+  </script>
+</body>
+</html>

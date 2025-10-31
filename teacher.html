@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Dashboard - EduGaze</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-left">
+      <div class="logo">EduGaze Teacher</div>
+    </div>
+    <div class="nav-right">
+      <div class="user-info">
+        <span id="userName">Teacher</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="header">
+      <h1>Class Engagement Dashboard</h1>
+      <p>Monitor student attention and emotion patterns across your class</p>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="card-icon">👥</div>
+        <p class="card-label">Students Today</p>
+        <p class="card-value">28</p>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">📊</div>
+        <p class="card-label">Avg Engagement</p>
+        <p class="card-value">87%</p>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">😊</div>
+        <p class="card-label">Avg Happiness</p>
+        <p class="card-value">82%</p>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">⚠️</div>
+        <p class="card-label">Need Attention</p>
+        <p class="card-value">3</p>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-primary" onclick="generateReport()">Generate Class Report</button>
+      <button class="btn btn-secondary" onclick="uploadJSON()">Upload AI Data (JSON)</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">Export as CSV</button>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3 class="chart-title">Emotion Distribution</h3>
+        <div class="chart-container">
+          <canvas id="emotionChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3 class="chart-title">Engagement Levels</h3>
+        <div class="chart-container">
+          <canvas id="engagementChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Top Students by Focus</h2>
+      <table class="students-table">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Focus %</th>
+            <th>Emotion</th>
+            <th>Engagement</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="studentTableBody">
+          <tr>
+            <td>Ahmed Hassan</td>
+            <td>94%</td>
+            <td>Happy</td>
+            <td>92%</td>
+            <td><span class="badge badge-excellent">Excellent</span></td>
+            <td><button class="btn btn-secondary" onclick="viewDetails('Ahmed Hassan')">View</button></td>
+          </tr>
+          <tr>
+            <td>Fatima Al-Mansouri</td>
+            <td>91%</td>
+            <td>Happy</td>
+            <td>89%</td>
+            <td><span class="badge badge-excellent">Excellent</span></td>
+            <td><button class="btn btn-secondary" onclick="viewDetails('Fatima Al-Mansouri')">View</button></td>
+          </tr>
+          <tr>
+            <td>Omar Al-Mazrouei</td>
+            <td>85%</td>
+            <td>Neutral</td>
+            <td>82%</td>
+            <td><span class="badge badge-good">Good</span></td>
+            <td><button class="btn btn-secondary" onclick="viewDetails('Omar Al-Mazrouei')">View</button></td>
+          </tr>
+          <tr>
+            <td>Layla Al-Kaabi</td>
+            <td>78%</td>
+            <td>Confused</td>
+            <td>72%</td>
+            <td><span class="badge badge-average">Average</span></td>
+            <td><button class="btn btn-secondary" onclick="viewDetails('Layla Al-Kaabi')">View</button></td>
+          </tr>
+          <tr>
+            <td>Mohammed Al-Qasimi</td>
+            <td>62%</td>
+            <td>Disengaged</td>
+            <td>58%</td>
+            <td><span class="badge badge-needs-improvement">Needs Improvement</span></td>
+            <td><button class="btn btn-secondary" onclick="viewDetails('Mohammed Al-Qasimi')">View</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal" id="reportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Class Report</h2>
+        <button class="close-btn" onclick="closeModal()">×</button>
+      </div>
+      <div id="reportContent"></div>
+      <div class="action-buttons" style="margin-top: 30px;">
+        <button class="btn btn-primary" onclick="downloadReport()">Download Report</button>
+        <button class="btn btn-secondary" onclick="shareReport()">Share via Email</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="uploadModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Upload AI Data (JSON)</h2>
+        <button class="close-btn" onclick="closeModal()">×</button>
+      </div>
+      <p style="color: #aaa; margin-bottom: 20px;">Upload emotion detection JSON file</p>
+      <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept=".json" onchange="handleFileUpload(event)">
+        <p>Click to select JSON file</p>
+      </div>
+      <div id="uploadStatus" style="margin-top: 20px; color: #aaa;"></div>
+    </div>
+  </div>
+
+  <script src="teacher-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration - EduGaze</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link rel="stylesheet" href="shared-styles.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-left">
+      <div class="logo">EduGaze Admin</div>
+    </div>
+    <div class="nav-right">
+      <div class="user-info">
+        <span id="userName">Administrator</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="header">
+      <h1>System Overview</h1>
+      <p>Monitor system-wide engagement and performance metrics</p>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="card-icon">🏫</div>
+        <p class="card-label">Total Classes</p>
+        <p class="card-value">24</p>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">👥</div>
+        <p class="card-label">Active Students</p>
+        <p class="card-value">680</p>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">👨‍🏫</div>
+        <p class="card-label">Teachers</p>
+        <p class="card-value">42</p>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">📊</div>
+        <p class="card-label">Avg System Engagement</p>
+        <p class="card-value">86%</p>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-primary" onclick="generateSystemReport()">Generate System Report</button>
+      <button class="btn btn-secondary" onclick="exportData()">Export All Data</button>
+      <button class="btn btn-secondary" onclick="manageUsers()">Manage Users</button>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3 class="chart-title">School-Wide Engagement Trend</h3>
+        <div class="chart-container">
+          <canvas id="engagementChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3 class="chart-title">Class Performance Distribution</h3>
+        <div class="chart-container">
+          <canvas id="performanceChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3 class="chart-title">Subject Engagement Comparison</h3>
+        <div class="chart-container">
+          <canvas id="subjectChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3 class="chart-title">Monthly Active Users</h3>
+        <div class="chart-container">
+          <canvas id="usersChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Top Performing Classes</h2>
+      <table class="students-table">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Teacher</th>
+            <th>Students</th>
+            <th>Avg Engagement</th>
+            <th>Avg Focus</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Grade 10-A Science</td>
+            <td>Dr. Ahmed Hassan</td>
+            <td>28</td>
+            <td>92%</td>
+            <td>89%</td>
+            <td><span class="badge badge-excellent">Excellent</span></td>
+            <td><button class="btn btn-secondary" onclick="viewClass(1)">View</button></td>
+          </tr>
+          <tr>
+            <td>Grade 9-B Math</td>
+            <td>Prof. Sara Al-Mansoori</td>
+            <td>30</td>
+            <td>89%</td>
+            <td>86%</td>
+            <td><span class="badge badge-excellent">Excellent</span></td>
+            <td><button class="btn btn-secondary" onclick="viewClass(2)">View</button></td>
+          </tr>
+          <tr>
+            <td>Grade 11-A Physics</td>
+            <td>Dr. Mohammed Al-Qasimi</td>
+            <td>26</td>
+            <td>85%</td>
+            <td>83%</td>
+            <td><span class="badge badge-good">Good</span></td>
+            <td><button class="btn btn-secondary" onclick="viewClass(3)">View</button></td>
+          </tr>
+          <tr>
+            <td>Grade 8-C English</td>
+            <td>Ms. Fatima Al-Kaabi</td>
+            <td>32</td>
+            <td>78%</td>
+            <td>75%</td>
+            <td><span class="badge badge-average">Average</span></td>
+            <td><button class="btn btn-secondary" onclick="viewClass(4)">View</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal" id="reportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>System Report</h2>
+        <button class="close-btn" onclick="closeModal()">×</button>
+      </div>
+      <div id="reportContent"></div>
+      <div class="action-buttons" style="margin-top: 30px;">
+        <button class="btn btn-primary" onclick="downloadSystemReport()">Download Report</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin-dashboard.js"></script>
+</body>
+</html>
