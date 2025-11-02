@@ -1,4 +1,4 @@
-// EduGaze Application - Simplified Emotion Detection with Direct EAR
+// EduGaze Application - Enhanced with Sleep Tracking
 
 let video, model, detector;
 let isRunning = false;
@@ -12,7 +12,7 @@ let isSleeping = false;
 let sleepStartTime = null;
 let consecutiveSleepFrames = 0;
 const SLEEP_THRESHOLD_FRAMES = 45; // ~1.5 seconds at 30fps
-const WAKE_THRESHOLD_FRAMES = 15;
+const WAKE_THRESHOLD_FRAMES = 15; // ~0.5 seconds to wake up
 
 let emotionHistory = {
     smile: [],
@@ -32,23 +32,28 @@ let smoothingBuffer = {
 };
 const SMOOTHING_WINDOW = 5;
 
+// Adaptive baseline tracking
+let baselineEAR = null;
+let baselineMouthRatio = null;
+let frameCount = 0;
+const BASELINE_FRAMES = 30;
+
 // EAR history for sleep detection
 let earHistory = [];
 const EAR_HISTORY_SIZE = 10;
-
-// Face size normalization
-let faceWidth = 1.0;
 
 // Initialize the application
 async function init() {
     try {
         video = document.getElementById('videoElement');
         
+        // Setup webcam
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { width: 640, height: 480 }
         });
         video.srcObject = stream;
         
+        // Load face detection model
         await tf.setBackend('webgl');
         await tf.ready();
         
@@ -92,11 +97,6 @@ async function detectFace() {
             const face = predictions[0];
             const landmarks = face.keypoints;
             
-            // Calculate face width for normalization
-            const leftCheek = landmarks[234];
-            const rightCheek = landmarks[454];
-            faceWidth = distance(leftCheek, rightCheek);
-            
             // Calculate emotions and sleep state
             const emotions = calculateEmotions(landmarks);
             const sleepState = detectSleep(landmarks);
@@ -108,8 +108,10 @@ async function detectFace() {
             updateEmotionBars(emotions);
             updateHistory(emotions);
             updateEngagementScore(emotions);
+            
+            frameCount++;
         } else {
-            // No face detected
+            // No face detected - might be sleeping or away
             consecutiveSleepFrames++;
             if (consecutiveSleepFrames > SLEEP_THRESHOLD_FRAMES) {
                 updateSleepTracking(true);
@@ -140,162 +142,22 @@ function detectSleep(landmarks) {
     // Calculate average EAR over history
     const avgEARHistory = earHistory.reduce((a, b) => a + b, 0) / earHistory.length;
     
-    // Fixed sleep threshold - eyes closed
-    const SLEEP_EAR_THRESHOLD = 0.15;
-    
-    // Blink detection - quick eye closure
-    const BLINK_EAR_THRESHOLD = 0.21;
-    if (avgEAR < BLINK_EAR_THRESHOLD && Date.now() - lastBlinkTime > 300) {
-        blinkCount++;
-        lastBlinkTime = Date.now();
-        document.getElementById('blinkCount').textContent = blinkCount;
-        updateBlinkRate();
-    }
+    // Adaptive sleep threshold
+    const sleepThreshold = (baselineEAR || 0.25) * 0.6;
     
     // Check if eyes are consistently closed
-    const eyesClosed = avgEARHistory < SLEEP_EAR_THRESHOLD;
+    const eyesClosed = avgEARHistory < sleepThreshold;
     
     if (eyesClosed) {
         consecutiveSleepFrames++;
     } else {
+        // Reset if eyes open
         if (consecutiveSleepFrames > 0) {
             consecutiveSleepFrames = Math.max(0, consecutiveSleepFrames - 3);
         }
     }
     
     return consecutiveSleepFrames > SLEEP_THRESHOLD_FRAMES;
-}
-
-// Simplified emotion calculation
-function calculateEmotions(landmarks) {
-    // Eye landmarks
-    const leftEye = [33, 160, 158, 133, 153, 144].map(i => landmarks[i]);
-    const rightEye = [362, 385, 387, 263, 373, 380].map(i => landmarks[i]);
-    
-    // Mouth landmarks
-    const mouthLeft = landmarks[61];
-    const mouthRight = landmarks[291];
-    const mouthTop = landmarks[13];
-    const mouthBottom = landmarks[14];
-    
-    // Eyebrow landmarks
-    const leftBrowInner = landmarks[70];
-    const leftBrowOuter = landmarks[105];
-    const rightBrowInner = landmarks[300];
-    const rightBrowOuter = landmarks[334];
-    
-    // Calculate EAR
-    const earLeft = calculateEAR(leftEye);
-    const earRight = calculateEAR(rightEye);
-    const avgEAR = (earLeft + earRight) / 2;
-    
-    // Mouth metrics
-    const mouthWidth = distance(mouthLeft, mouthRight);
-    const mouthHeight = distance(mouthTop, mouthBottom);
-    const mouthRatio = mouthHeight / mouthWidth;
-    
-    // Normalize by face width to handle different distances from camera
-    const normalizedMouthWidth = mouthWidth / faceWidth;
-    const normalizedMouthHeight = mouthHeight / faceWidth;
-    
-    // Mouth corners for smile detection
-    const mouthCenterY = (mouthTop.y + mouthBottom.y) / 2;
-    const leftCornerLift = mouthCenterY - mouthLeft.y;
-    const rightCornerLift = mouthCenterY - mouthRight.y;
-    const avgCornerLift = (leftCornerLift + rightCornerLift) / 2;
-    const normalizedCornerLift = avgCornerLift / faceWidth;
-    
-    // Eyebrow height
-    const leftEyeCenter = leftEye[0];
-    const rightEyeCenter = rightEye[0];
-    const leftBrowHeight = leftEyeCenter.y - leftBrowOuter.y;
-    const rightBrowHeight = rightEyeCenter.y - rightBrowOuter.y;
-    const avgBrowHeight = (leftBrowHeight + rightBrowHeight) / 2;
-    const normalizedBrowHeight = avgBrowHeight / faceWidth;
-    
-    // === EMOTION CALCULATIONS (Simplified, No Calibration) ===
-    
-    // SMILE - based on mouth corner lift and width
-    let smileScore = 0;
-    if (normalizedCornerLift > 0.008) {
-        smileScore = clamp((normalizedCornerLift / 0.035) * 100, 0, 100);
-        // Boost if mouth is wider
-        if (normalizedMouthWidth > 0.15) {
-            smileScore *= 1.2;
-        }
-    }
-    smileScore = clamp(smileScore, 0, 100);
-    
-    // HAPPY - smile + relaxed eyes
-    let happyScore = 0;
-    if (smileScore > 25) {
-        // Check if eyes are normally open (not squinting or wide)
-        if (avgEAR > 0.20 && avgEAR < 0.35) {
-            happyScore = smileScore * 0.95;
-        }
-    }
-    happyScore = clamp(happyScore, 0, 100);
-    
-    // SURPRISED - wide eyes and open mouth
-    let surprisedScore = 0;
-    const mouthOpenness = mouthRatio;
-    const eyeOpenness = avgEAR;
-    
-    if (mouthOpenness > 0.40 || eyeOpenness > 0.32) {
-        surprisedScore = (mouthOpenness - 0.25) * 200 + (eyeOpenness - 0.25) * 300;
-        surprisedScore = clamp(surprisedScore, 0, 100);
-    }
-    
-    // CONFUSED - furrowed brows + frown or asymmetric mouth
-    let confusedScore = 0;
-    const browFurrow = normalizedBrowHeight > 0.08 ? clamp(normalizedBrowHeight * 500, 0, 60) : 0;
-    const mouthAsymmetry = Math.abs(leftCornerLift - rightCornerLift) / faceWidth;
-    const frownFactor = normalizedCornerLift < -0.005 ? Math.abs(normalizedCornerLift) * 500 : 0;
-    
-    confusedScore = browFurrow + (frownFactor * 0.8) + (mouthAsymmetry * 200);
-    confusedScore = clamp(confusedScore, 0, 100);
-    
-    // FOCUSED - neutral expression, steady gaze
-    let focusedScore = 0;
-    const totalExpression = smileScore + happyScore + surprisedScore + confusedScore;
-    
-    if (totalExpression < 100 && !isSleeping) {
-        // Eyes should be normally open
-        if (avgEAR > 0.20 && avgEAR < 0.32) {
-            // Mouth should be relatively neutral
-            if (mouthRatio < 0.45) {
-                const neutrality = 100 - (totalExpression * 0.6);
-                focusedScore = clamp(neutrality, 0, 100);
-            }
-        }
-    }
-    focusedScore = clamp(focusedScore, 0, 100);
-    
-    return {
-        smile: smileScore,
-        happy: happyScore,
-        surprised: surprisedScore,
-        confused: confusedScore,
-        focused: focusedScore
-    };
-}
-
-// Calculate Eye Aspect Ratio
-function calculateEAR(eyePoints) {
-    const A = distance(eyePoints[1], eyePoints[5]);
-    const B = distance(eyePoints[2], eyePoints[4]);
-    const C = distance(eyePoints[0], eyePoints[3]);
-    return (A + B) / (2.0 * C);
-}
-
-// Distance between two points
-function distance(p1, p2) {
-    return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-}
-
-// Clamp value
-function clamp(value, min, max) {
-    return Math.min(Math.max(value, min), max);
 }
 
 // Update sleep tracking state
@@ -332,6 +194,142 @@ function updateSleepTracking(currentlySleeping) {
     const sessionDuration = (Date.now() - sessionStartTime) / 1000;
     const sleepPercentage = (currentSleepTime / sessionDuration * 100).toFixed(1);
     document.getElementById('sleepPercentage').textContent = `${sleepPercentage}% of session`;
+}
+
+// Improved emotion calculation
+function calculateEmotions(landmarks) {
+    const leftEye = [33, 160, 158, 133, 153, 144].map(i => landmarks[i]);
+    const rightEye = [362, 385, 387, 263, 373, 380].map(i => landmarks[i]);
+    
+    const mouthLeft = landmarks[61];
+    const mouthRight = landmarks[291];
+    const mouthTop = landmarks[13];
+    const mouthBottom = landmarks[14];
+    
+    const leftBrowInner = landmarks[70];
+    const rightBrowInner = landmarks[300];
+    const leftBrowOuter = landmarks[105];
+    const rightBrowOuter = landmarks[334];
+    
+    // Calculate EAR
+    const earLeft = calculateEAR(leftEye);
+    const earRight = calculateEAR(rightEye);
+    const avgEAR = (earLeft + earRight) / 2;
+    
+    // Adaptive baseline
+    if (frameCount < BASELINE_FRAMES) {
+        if (!baselineEAR) baselineEAR = avgEAR;
+        else baselineEAR = baselineEAR * 0.95 + avgEAR * 0.05;
+    }
+    
+    // Blink detection
+    const blinkThreshold = (baselineEAR || 0.25) * 0.7;
+    if (avgEAR < blinkThreshold && Date.now() - lastBlinkTime > 300) {
+        blinkCount++;
+        lastBlinkTime = Date.now();
+        document.getElementById('blinkCount').textContent = blinkCount;
+        updateBlinkRate();
+    }
+    
+    // Mouth metrics
+    const mouthWidth = distance(mouthLeft, mouthRight);
+    const mouthHeight = distance(mouthTop, mouthBottom);
+    const mouthRatio = mouthHeight / mouthWidth;
+    
+    if (frameCount < BASELINE_FRAMES) {
+        if (!baselineMouthRatio) baselineMouthRatio = mouthRatio;
+        else baselineMouthRatio = baselineMouthRatio * 0.95 + mouthRatio * 0.05;
+    }
+    
+    // Mouth corner lift
+    const leftCornerY = mouthLeft.y;
+    const rightCornerY = mouthRight.y;
+    const centerY = (mouthTop.y + mouthBottom.y) / 2;
+    const cornerLift = (centerY - leftCornerY + centerY - rightCornerY) / 2;
+    const cornerLiftRatio = cornerLift / mouthWidth;
+    
+    // Eyebrow metrics
+    const leftBrowHeight = leftBrowOuter.y - leftEye[0].y;
+    const rightBrowHeight = rightBrowOuter.y - rightEye[0].y;
+    const avgBrowHeight = (leftBrowHeight + rightBrowHeight) / 2;
+    
+    // SMILE
+    let smileScore = 0;
+    if (cornerLiftRatio > 0.02) {
+        smileScore = Math.min(100, (cornerLiftRatio / 0.08) * 100);
+        const widthFactor = baselineMouthRatio ? (baselineMouthRatio / mouthRatio) : 1;
+        if (widthFactor > 1.1) {
+            smileScore *= Math.min(1.5, widthFactor);
+        }
+    }
+    smileScore = clamp(smileScore, 0, 100);
+    
+    // HAPPY
+    let happyScore = 0;
+    if (smileScore > 30) {
+        const eyeRelaxation = baselineEAR ? (avgEAR / baselineEAR) : 1;
+        if (eyeRelaxation > 0.85 && eyeRelaxation < 1.15) {
+            happyScore = smileScore * 0.9;
+        }
+    }
+    happyScore = clamp(happyScore, 0, 100);
+    
+    // SURPRISED
+    let surprisedScore = 0;
+    const mouthOpenness = baselineMouthRatio ? (mouthRatio / baselineMouthRatio) : 1;
+    const eyeOpenness = baselineEAR ? (avgEAR / baselineEAR) : 1;
+    
+    if (mouthOpenness > 1.5 || eyeOpenness > 1.15) {
+        surprisedScore = (mouthOpenness - 1) * 50 + (eyeOpenness - 1) * 200;
+        surprisedScore = Math.min(100, surprisedScore);
+    }
+    surprisedScore = clamp(surprisedScore, 0, 100);
+    
+    // CONFUSED
+    let confusedScore = 0;
+    const browFurrow = avgBrowHeight > 0 ? Math.min(1, avgBrowHeight / 15) : 0;
+    const mouthAsymmetry = Math.abs(leftCornerY - rightCornerY);
+    const frownFactor = cornerLiftRatio < -0.01 ? Math.abs(cornerLiftRatio) * 100 : 0;
+    
+    confusedScore = (browFurrow * 60) + (frownFactor * 0.8) + (mouthAsymmetry * 30);
+    confusedScore = clamp(confusedScore, 0, 100);
+    
+    // FOCUSED
+    let focusedScore = 0;
+    const totalExpression = smileScore + happyScore + surprisedScore + confusedScore;
+    
+    if (totalExpression < 80 && !isSleeping) {
+        const eyeFocus = baselineEAR ? clamp((avgEAR / baselineEAR) * 100, 70, 100) : 80;
+        const steadiness = mouthRatio < (baselineMouthRatio || 0.3) * 1.3 ? 1 : 0.5;
+        focusedScore = ((100 - totalExpression * 0.5) * steadiness * (eyeFocus / 100));
+    }
+    focusedScore = clamp(focusedScore, 0, 100);
+    
+    return {
+        smile: smileScore,
+        happy: happyScore,
+        surprised: surprisedScore,
+        confused: confusedScore,
+        focused: focusedScore
+    };
+}
+
+// Calculate Eye Aspect Ratio
+function calculateEAR(eyePoints) {
+    const A = distance(eyePoints[1], eyePoints[5]);
+    const B = distance(eyePoints[2], eyePoints[4]);
+    const C = distance(eyePoints[0], eyePoints[3]);
+    return (A + B) / (2.0 * C);
+}
+
+// Distance between two points
+function distance(p1, p2) {
+    return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+}
+
+// Clamp value
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
 }
 
 // Smooth emotion values
@@ -380,6 +378,7 @@ function updateHistory(emotions) {
 
 // Calculate and update engagement score
 function updateEngagementScore(emotions) {
+    // Engagement = focused + happy - (confused * 0.5) - sleep penalty
     const sleepPenalty = isSleeping ? 50 : 0;
     const engagementScore = Math.max(0, 
         emotions.focused * 0.6 + 
@@ -457,6 +456,7 @@ function exportData() {
         }
     }
     
+    // Calculate engagement score
     const avgFocused = sessionData.emotions_average.focused || 0;
     const avgHappy = sessionData.emotions_average.happy || 0;
     const avgConfused = sessionData.emotions_average.confused || 0;
@@ -466,8 +466,10 @@ function exportData() {
         avgFocused * 0.6 + avgHappy * 0.3 - avgConfused * 0.3 - sleepPenalty
     ).toFixed(2);
     
+    // Save to localStorage for report page
     localStorage.setItem('edugazeSession', JSON.stringify(sessionData));
     
+    // Download as JSON
     const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -484,7 +486,7 @@ function setupEventListeners() {
     document.getElementById('exportBtn').addEventListener('click', exportData);
     
     document.getElementById('viewReportBtn').addEventListener('click', () => {
-        exportData();
+        exportData(); // Save to localStorage
         window.location.href = 'report.html';
     });
     
