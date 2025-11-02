@@ -9,8 +9,8 @@ let lastBlinkTime = 0;
 // Sleep tracking variables
 let sleepTime = 0;
 let isSleeping = false;
-let sleepStartTime = null;             asd
-let consecutiveSleepFrames = 0;       asdasd
+let sleepStartTime = null;             
+let consecutiveSleepFrames = 0;       
 const SLEEP_THRESHOLD_FRAMES = 45;
 const WAKE_THRESHOLD_FRAMES = 15;
 
