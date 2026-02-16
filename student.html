@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduGaze Ultimate - Enhanced</title>
+    <title>EduGaze Ultimate - Professional Dashboard</title>
     
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -18,49 +18,123 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0a1628 0%, #1a2332 50%, #0a1628 100%);
-            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            padding: 24px;
             min-height: 100vh;
             color: #fff;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .container {
-            max-width: 1600px;
+            max-width: 1920px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
             backdrop-filter: blur(20px);
-            padding: 20px 30px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 24px 32px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.3),
+                0 10px 10px -5px rgba(0, 0, 0, 0.2);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
         h1 {
             font-size: 2rem;
             margin: 0;
-            background: linear-gradient(135deg, #007bff, #00c6ff);
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 4px;
+            font-weight: 500;
         }
 
         .header-right {
             display: flex;
-            gap: 15px;
+            gap: 16px;
             align-items: center;
         }
 
-        .btn-login {
-            padding: 10px 25px;
-            background: linear-gradient(135deg, #007bff, #00c6ff);
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .btn-logout {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             border: none;
             border-radius: 10px;
             color: white;
@@ -69,68 +143,103 @@
             cursor: pointer;
             transition: all 0.3s;
             text-decoration: none;
-            display: inline-block;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
-        .btn-login:hover {
-            background: linear-gradient(135deg, #0056b3, #0099cc);
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 123, 255, 0.4);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
         }
 
         .status-badge {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 15px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
         }
 
         .status-loading {
-            background: rgba(251, 191, 36, 0.1);
-            border: 1px solid rgba(251, 191, 36, 0.3);
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid rgba(251, 191, 36, 0.4);
             color: #fbbf24;
         }
 
         .status-ready {
-            background: rgba(81, 207, 102, 0.1);
-            border: 1px solid rgba(81, 207, 102, 0.3);
-            color: #51cf66;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #10b981;
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
-            background: #51cf66;
+            background: currentColor;
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
         }
 
-        .main-grid {
+        /* New Layout - Video and Emotions side by side */
+        .main-content {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .video-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 16px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 20px;
             backdrop-filter: blur(20px);
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.3),
+                0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(148, 163, 184, 0.3);
+            box-shadow: 
+                0 25px 30px -5px rgba(0, 0, 0, 0.4),
+                0 15px 15px -5px rgba(0, 0, 0, 0.3);
         }
 
         .card-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
         }
 
         .video-wrapper {
@@ -138,12 +247,15 @@
             background: #000;
             border-radius: 0;
             overflow: hidden;
+            min-height: 600px;
         }
 
         #inputVideo {
             width: 100%;
+            height: 100%;
             display: block;
             transform: scaleX(-1);
+            object-fit: cover;
         }
 
         #outputCanvas {
@@ -155,167 +267,121 @@
         }
 
         .controls {
-            display: flex;
-            gap: 10px;
-            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.5);
         }
 
         button {
-            flex: 1;
-            padding: 15px;
+            padding: 16px;
             border: none;
             border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .btn-start {
-            background: linear-gradient(135deg, #51cf66, #37b24d);
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .btn-start:hover:not(:disabled) {
-            background: linear-gradient(135deg, #37b24d, #2f9e44);
+            background: linear-gradient(135deg, #059669, #047857);
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(81, 207, 102, 0.4);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
         }
 
         .btn-stop {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
         .btn-stop:hover:not(:disabled) {
-            background: linear-gradient(135deg, #ee5a52, #e03131);
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.4);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
         }
 
         .btn-export {
-            background: linear-gradient(135deg, #007bff, #00c6ff);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
         .btn-export:hover:not(:disabled) {
-            background: linear-gradient(135deg, #0056b3, #0099cc);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0, 123, 255, 0.4);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
         }
 
         button:disabled {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(100, 116, 139, 0.3);
             cursor: not-allowed;
             opacity: 0.5;
-            color: #999;
+            color: #64748b;
+            box-shadow: none;
         }
 
-        .stats-grid {
-            display: grid;
-            gap: 15px;
-            padding: 20px;
-        }
-
-        .stat-box {
-            padding: 20px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            transition: all 0.3s;
-        }
-
-        .stat-box:hover {
-            background: rgba(0, 123, 255, 0.1);
-            border-color: rgba(0, 123, 255, 0.5);
-            transform: translateY(-3px);
-        }
-
-        .stat-box.success {
-            background: rgba(81, 207, 102, 0.1);
-            border-color: rgba(81, 207, 102, 0.3);
-        }
-
-        .stat-box.danger {
-            background: rgba(255, 107, 107, 0.1);
-            border-color: rgba(255, 107, 107, 0.3);
-            animation: pulseGlow 2s infinite;
-        }
-
-        @keyframes pulseGlow {
-            0%, 100% { 
-                box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
-                opacity: 1; 
-            }
-            50% { 
-                box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
-                opacity: 0.9; 
-            }
-        }
-
-        .stat-label {
-            font-size: 13px;
-            color: #aaa;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 26px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #007bff, #00c6ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stat-value.small {
-            font-size: 20px;
+        /* Emotions sidebar */
+        .emotions-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
         }
 
         .emotion-bars {
-            padding: 20px;
-            margin-top: 20px;
+            padding: 24px;
         }
 
         .emotion-item {
-            margin: 15px 0;
+            margin: 20px 0;
         }
 
         .emotion-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-size: 14px;
-            font-weight: 500;
-            color: #fff;
+            font-weight: 600;
+            color: #e2e8f0;
         }
 
         .emotion-bar {
-            height: 35px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
+            height: 40px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px;
             overflow: hidden;
             position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.15);
         }
 
         .emotion-fill {
             height: 100%;
-            background: linear-gradient(90deg, #007bff, #00c6ff);
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
             transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 20px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            padding-right: 15px;
+            padding-right: 16px;
             color: #fff;
-            font-weight: 600;
-            box-shadow: 0 0 20px rgba(0, 123, 255, 0.3);
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
             position: relative;
             overflow: hidden;
         }
 
-        /* Animated shimmer effect on the fill */
         .emotion-fill::before {
             content: '';
             position: absolute;
@@ -329,19 +395,14 @@
                 rgba(255, 255, 255, 0.3),
                 transparent
             );
-            animation: shimmer 2s infinite;
+            animation: shimmer 2.5s infinite;
         }
 
         @keyframes shimmer {
-            0% {
-                left: -100%;
-            }
-            100% {
-                left: 100%;
-            }
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
-        /* Different colors for different emotions */
         .emotion-fill.happy {
             background: linear-gradient(90deg, #fbbf24, #f59e0b);
             box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
@@ -377,24 +438,25 @@
             box-shadow: 0 0 20px rgba(107, 114, 128, 0.4);
         }
 
-        /* Pulse animation for high values */
         @keyframes fillPulse {
-            0%, 100% {
-                transform: scaleY(1);
-            }
-            50% {
-                transform: scaleY(1.05);
-            }
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.05); }
         }
 
         .emotion-fill.high-value {
             animation: fillPulse 1.5s ease-in-out infinite;
         }
 
+        .engagement-section {
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 16px;
+        }
+
         .engagement-circle {
-            width: 150px;
-            height: 150px;
-            margin: 20px auto;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto;
             position: relative;
         }
 
@@ -403,90 +465,321 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #007bff, #00c6ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             text-align: center;
         }
 
+        .engagement-value {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
         .engagement-label {
-            font-size: 0.9rem;
-            color: #aaa;
+            font-size: 14px;
+            color: #94a3b8;
             display: block;
-            margin-top: 5px;
+            margin-top: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Stats section below */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+        }
+
+        .stat-box {
+            padding: 24px;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stat-box:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .stat-box:hover::before {
+            opacity: 1;
+        }
+
+        .stat-box.success::before {
+            background: linear-gradient(90deg, #10b981, #06b6d4);
+        }
+
+        .stat-box.danger::before {
+            background: linear-gradient(90deg, #ef4444, #f97316);
+            opacity: 1;
+        }
+
+        .stat-box.success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .stat-box.danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+                opacity: 1; 
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+                opacity: 0.95; 
+            }
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .stat-value.small {
+            font-size: 20px;
         }
 
         h3 {
-            color: #fff;
-            margin-bottom: 15px;
+            color: #e2e8f0;
+            margin: 0;
             font-weight: 600;
+            font-size: 18px;
+            letter-spacing: -0.3px;
+        }
+
+        .section-title {
+            padding: 24px;
+            padding-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
         }
 
         .sleep-warning {
-            background: rgba(255, 107, 107, 0.1);
-            border: 1px solid rgba(255, 107, 107, 0.3);
-            color: #ff6b6b;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 16px 24px;
             display: none;
             font-weight: 600;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
         }
 
         .sleep-warning.active {
-            display: block;
+            display: flex;
+            animation: slideIn 0.3s ease-out;
         }
 
-        /* Add gradient definition */
-        #gradient stop:first-child {
-            stop-color: #007bff;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        #gradient stop:last-child {
-            stop-color: #00c6ff;
+
+        @media (max-width: 1400px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .emotions-sidebar {
+                order: 2;
+            }
+
+            .stats-section {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-section {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .user-info {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div>
-                <h1>🎓 EduGaze Ultimate</h1>
-                <p style="color: #6b7280; margin-top: 5px;">Hybrid: face-api.js + MediaPipe</p>
+            <div class="header-left">
+                <div class="logo">🎓</div>
+                <div>
+                    <h1>EduGaze Ultimate</h1>
+                    <p class="subtitle">Advanced Student Engagement Analytics</p>
+                </div>
             </div>
             <div class="header-right">
-                <a href="index.html" class="btn-login">🏠 Home</a>
-                <div class="status-badge status-loading" id="statusBadge">Loading...</div>
+                <div class="user-info">
+                    <div class="user-avatar">S</div>
+                    <span class="user-name">Student</span>
+                </div>
+                <div class="status-badge status-loading" id="statusBadge">
+                    <span class="status-dot"></span>
+                    Loading...
+                </div>
+                <a href="https://edu-gaze.vercel.app/index.html" class="btn-logout">
+                    <span>🚪</span>
+                    Logout
+                </a>
             </div>
         </div>
 
-        <div class="main-grid">
-            <div class="card">
-                <h3 style="padding: 20px; padding-bottom: 0;">📹 Live Video</h3>
-                
-                <div class="video-wrapper">
-                    <video id="inputVideo" autoplay muted playsinline></video>
-                    <canvas id="outputCanvas"></canvas>
-                </div>
+        <div class="main-content">
+            <!-- Video Section (Left) -->
+            <div class="video-section">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📹</div>
+                        <h3>Live Video Feed</h3>
+                    </div>
+                    
+                    <div class="video-wrapper">
+                        <video id="inputVideo" autoplay muted playsinline></video>
+                        <canvas id="outputCanvas"></canvas>
+                    </div>
 
-                <div class="controls">
-                    <button class="btn-start" id="startBtn" onclick="start()" disabled>Start</button>
-                    <button class="btn-stop" id="stopBtn" onclick="stop()" disabled>Stop</button>
-                    <button class="btn-export" onclick="exportData()">Export</button>
-                </div>
+                    <div class="sleep-warning" id="sleepWarning">
+                        <span style="font-size: 24px;">💤</span>
+                        <div>
+                            <strong>Sleep Detected!</strong>
+                            <p style="margin: 0; font-size: 13px; opacity: 0.9;">Consider taking a short break to refresh.</p>
+                        </div>
+                    </div>
 
-                <div class="sleep-warning" id="sleepWarning">
-                    💤 SLEEP DETECTED! Consider taking a break.
+                    <div class="controls">
+                        <button class="btn-start" id="startBtn" onclick="start()" disabled>
+                            <span>▶️</span>
+                            Start Session
+                        </button>
+                        <button class="btn-stop" id="stopBtn" onclick="stop()" disabled>
+                            <span>⏹️</span>
+                            Stop Session
+                        </button>
+                        <button class="btn-export" onclick="exportData()">
+                            <span>📥</span>
+                            Export Data
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <h3 style="padding: 20px; padding-bottom: 0;">📊 Metrics</h3>
+            <!-- Emotions Sidebar (Right) -->
+            <div class="emotions-sidebar">
+                <div class="card">
+                    <div class="section-title">
+                        <div class="section-icon">😊</div>
+                        <h3>Emotion Analysis</h3>
+                    </div>
+                    <div class="emotion-bars">
+                        <div id="emotionsList"></div>
+                    </div>
+                </div>
 
-                <div class="stats-grid">
+                <div class="card">
+                    <div class="engagement-section">
+                        <div class="engagement-circle">
+                            <svg width="180" height="180" style="transform: rotate(-90deg)">
+                                <defs>
+                                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                                        <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(148, 163, 184, 0.2)" stroke-width="14"></circle>
+                                <circle id="engagementCircle" cx="90" cy="90" r="75" fill="none" stroke="url(#gradient)" stroke-width="14" stroke-linecap="round" stroke-dasharray="471" stroke-dashoffset="471" style="transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1); filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));"></circle>
+                            </svg>
+                            <div class="engagement-score">
+                                <div class="engagement-value" id="engagementValue">0</div>
+                                <span class="engagement-label">Engagement</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section (Bottom) -->
+        <div class="card">
+            <div class="section-title">
+                <div class="section-icon">📊</div>
+                <h3>Real-Time Metrics</h3>
+            </div>
+            <div style="padding: 24px;">
+                <div class="stats-section">
                     <div class="stat-box" id="earBox">
-                        <div class="stat-label">EAR</div>
+                        <div class="stat-label">EAR Value</div>
                         <div class="stat-value" id="earValue">0.000</div>
                     </div>
 
@@ -496,41 +789,19 @@
                     </div>
 
                     <div class="stat-box success">
-                        <div class="stat-label">Blinks</div>
+                        <div class="stat-label">Blink Count</div>
                         <div class="stat-value" id="blinkCount">0</div>
                     </div>
 
                     <div class="stat-box" id="sleepBox">
                         <div class="stat-label">Sleep Status</div>
-                        <div class="stat-value small" id="sleepStatus">👀 AWAKE</div>
+                        <div class="stat-value small" id="sleepStatus">👀 Awake</div>
                     </div>
 
                     <div class="stat-box">
-                        <div class="stat-label">Session</div>
+                        <div class="stat-label">Session Duration</div>
                         <div class="stat-value small" id="sessionTime">0:00</div>
                     </div>
-                </div>
-
-                <div class="engagement-circle">
-                    <svg width="150" height="150" style="transform: rotate(-90deg)">
-                        <defs>
-                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" style="stop-color:#007bff;stop-opacity:1" />
-                                <stop offset="100%" style="stop-color:#00c6ff;stop-opacity:1" />
-                            </linearGradient>
-                        </defs>
-                        <circle cx="75" cy="75" r="65" fill="none" stroke="#e5e7eb" stroke-width="12"></circle>
-                        <circle id="engagementCircle" cx="75" cy="75" r="65" fill="none" stroke="url(#gradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="408" stroke-dashoffset="408" style="transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></circle>
-                    </svg>
-                    <div class="engagement-score">
-                        <span id="engagementValue">0</span>
-                        <span class="engagement-label">Engagement</span>
-                    </div>
-                </div>
-
-                <div class="emotion-bars">
-                    <h3>😊 Emotions</h3>
-                    <div id="emotionsList"></div>
                 </div>
             </div>
         </div>
@@ -588,7 +859,7 @@
                 console.log('✅ MediaPipe loaded');
 
                 modelsLoaded = true;
-                document.getElementById('statusBadge').textContent = 'Ready ✓';
+                document.getElementById('statusBadge').innerHTML = '<span class="status-dot"></span> Ready';
                 document.getElementById('statusBadge').className = 'status-badge status-ready';
                 document.getElementById('startBtn').disabled = false;
 
@@ -635,20 +906,18 @@
                 document.getElementById('startBtn').disabled = true;
                 document.getElementById('stopBtn').disabled = false;
 
-                // Log video state for debugging
                 console.log('📹 Video ready:', {
                     width: video.videoWidth,
                     height: video.videoHeight,
                     readyState: video.readyState
                 });
 
-                // Start emotion detection
                 setTimeout(() => {
                     console.log('🎭 Starting emotion detection...');
                     detectEmotions();
-                }, 1000); // Wait 1 second for video to stabilize
+                }, 1000);
                 
-                updateEmotions(); // Show initial UI
+                updateEmotions();
                 updateStats();
 
                 console.log('✅ Started');
@@ -681,12 +950,11 @@
             if (results.multiFaceLandmarks && results.multiFaceLandmarks[0]) {
                 const landmarks = results.multiFaceLandmarks[0];
 
-                // Draw mesh (mirrored)
                 ctx.scale(-1, 1);
                 ctx.translate(-canvas.width, 0);
 
                 drawConnectors(ctx, landmarks, FACEMESH_TESSELATION, 
-                    {color: 'rgba(102,126,234,0.1)', lineWidth: 1});
+                    {color: 'rgba(59,130,246,0.1)', lineWidth: 1});
                 drawConnectors(ctx, landmarks, FACEMESH_RIGHT_EYE, 
                     {color: '#10b981', lineWidth: 3});
                 drawConnectors(ctx, landmarks, FACEMESH_LEFT_EYE, 
@@ -698,19 +966,24 @@
 
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-                // Calculate EAR
                 const ear = (calcEAR(landmarks, LEFT_EYE) + calcEAR(landmarks, RIGHT_EYE)) / 2;
                 processEyes(ear);
 
-                // Draw overlay
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(10, 10, 250, 80);
+                // Enhanced overlay
+                const gradient = ctx.createLinearGradient(0, 0, 300, 0);
+                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.9)');
+                gradient.addColorStop(1, 'rgba(139, 92, 246, 0.9)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(10, 10, 280, 90);
+                
                 ctx.fillStyle = ear < EAR_THRESHOLD ? '#ef4444' : '#10b981';
-                ctx.font = 'bold 24px Arial';
-                ctx.fillText(`EAR: ${ear.toFixed(3)}`, 20, 40);
+                ctx.font = 'bold 28px Inter, Arial';
+                ctx.fillText(`EAR: ${ear.toFixed(3)}`, 25, 50);
+                
                 ctx.fillStyle = 'white';
-                ctx.font = '18px Arial';
-                ctx.fillText(`Blinks: ${blinkCount}`, 20, 70);
+                ctx.font = '20px Inter, Arial';
+                ctx.fillText(`Blinks: ${blinkCount}`, 25, 85);
             }
 
             ctx.restore();
@@ -734,19 +1007,18 @@
             const box = document.getElementById('earBox');
             if (ear < EAR_THRESHOLD) {
                 box.className = 'stat-box danger';
-                document.getElementById('eyeState').textContent = '😴 CLOSED';
+                document.getElementById('eyeState').textContent = '😴 Closed';
 
                 if (!wasEyesClosed) {
                     wasEyesClosed = true;
                     eyesClosedTime = Date.now();
                 }
 
-                // Check sleep
                 const closedDuration = Date.now() - eyesClosedTime;
                 if (closedDuration >= SLEEP_TIME && !isSleeping) {
                     isSleeping = true;
                     sleepStart = Date.now();
-                    document.getElementById('sleepStatus').textContent = '😴 SLEEPING';
+                    document.getElementById('sleepStatus').textContent = '😴 Sleeping';
                     document.getElementById('sleepBox').className = 'stat-box danger';
                     document.getElementById('sleepWarning').classList.add('active');
                     console.log('😴 SLEEP DETECTED');
@@ -754,7 +1026,7 @@
 
             } else {
                 box.className = 'stat-box success';
-                document.getElementById('eyeState').textContent = '👁️ OPEN';
+                document.getElementById('eyeState').textContent = '👁️ Open';
 
                 if (wasEyesClosed) {
                     const duration = Date.now() - eyesClosedTime;
@@ -771,7 +1043,7 @@
                 if (isSleeping) {
                     totalSleepTime += (Date.now() - sleepStart);
                     isSleeping = false;
-                    document.getElementById('sleepStatus').textContent = '👀 AWAKE';
+                    document.getElementById('sleepStatus').textContent = '👀 Awake';
                     document.getElementById('sleepBox').className = 'stat-box success';
                     document.getElementById('sleepWarning').classList.remove('active');
                     console.log('👀 AWAKE');
@@ -783,7 +1055,6 @@
             if (!isRunning) return;
 
             try {
-                // Make sure video is ready
                 if (video.readyState !== video.HAVE_ENOUGH_DATA) {
                     console.log('⏳ Video not ready yet...');
                     setTimeout(detectEmotions, 200);
@@ -825,16 +1096,25 @@
             const list = document.getElementById('emotionsList');
             list.innerHTML = '';
 
-            const emojis = {happy:'😊', sad:'😢', angry:'😠', fearful:'😨', disgusted:'🤢', surprised:'😮', neutral:'😐'};
+            const emojis = {
+                happy: '😊',
+                sad: '😢',
+                angry: '😠',
+                fearful: '😨',
+                disgusted: '🤢',
+                surprised: '😮',
+                neutral: '😐'
+            };
 
             for (const [name, val] of Object.entries(emotions)) {
                 const highValue = val > 60 ? 'high-value' : '';
+                const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
                 
                 list.innerHTML += `
                     <div class="emotion-item">
                         <div class="emotion-header">
-                            <span>${emojis[name]} ${name.charAt(0).toUpperCase() + name.slice(1)}</span>
-                            <span>${val.toFixed(0)}%</span>
+                            <span>${emojis[name]} ${capitalizedName}</span>
+                            <span>${val.toFixed(1)}%</span>
                         </div>
                         <div class="emotion-bar">
                             <div class="emotion-fill ${name} ${highValue}" style="width:${val}%"></div>
@@ -850,7 +1130,8 @@
 
             document.getElementById('engagementValue').textContent = Math.round(eng);
             const circle = document.getElementById('engagementCircle');
-            const offset = 408 - (eng / 100) * 408;
+            const circumference = 471; // 2 * π * 75
+            const offset = circumference - (eng / 100) * circumference;
             circle.style.strokeDashoffset = offset;
         }
 
@@ -870,18 +1151,27 @@
         function exportData() {
             const data = {
                 timestamp: new Date().toISOString(),
+                sessionDuration: sessionStart ? Math.floor((Date.now() - sessionStart) / 1000) : 0,
                 blinks: blinkCount,
                 emotions: emotions,
-                session: sessionStart ? Math.floor((Date.now() - sessionStart) / 1000) : 0
+                engagement: Math.round(
+                    emotions.happy * 0.4 + 
+                    emotions.neutral * 0.3 - 
+                    emotions.sad * 0.3 - 
+                    emotions.angry * 0.2
+                ),
+                totalSleepTime: totalSleepTime / 1000
             };
 
             const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `edugaze-${Date.now()}.json`;
+            a.download = `edugaze-session-${Date.now()}.json`;
             a.click();
             URL.revokeObjectURL(url);
+            
+            alert('Session data exported successfully!');
         }
 
         window.addEventListener('load', init);
