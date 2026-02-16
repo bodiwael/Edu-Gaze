@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduGaze Ultimate - FIXED</title>
+    <title>EduGaze Ultimate - Enhanced</title>
     
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -50,6 +50,32 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-login {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #007bff, #00c6ff);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-login:hover {
+            background: linear-gradient(135deg, #0056b3, #0099cc);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 123, 255, 0.4);
         }
 
         .status-badge {
@@ -257,7 +283,7 @@
 
         .emotion-header {
             display: flex;
-            justify-space between;
+            justify-content: space-between;
             margin-bottom: 8px;
             font-size: 14px;
             font-weight: 500;
@@ -270,12 +296,13 @@
             border-radius: 20px;
             overflow: hidden;
             position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .emotion-fill {
             height: 100%;
             background: linear-gradient(90deg, #007bff, #00c6ff);
-            transition: width 0.3s;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 20px;
             display: flex;
             align-items: center;
@@ -283,6 +310,85 @@
             padding-right: 15px;
             color: #fff;
             font-weight: 600;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated shimmer effect on the fill */
+        .emotion-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* Different colors for different emotions */
+        .emotion-fill.happy {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+        }
+
+        .emotion-fill.sad {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .emotion-fill.angry {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .emotion-fill.fearful {
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .emotion-fill.disgusted {
+            background: linear-gradient(90deg, #10b981, #059669);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .emotion-fill.surprised {
+            background: linear-gradient(90deg, #f97316, #ea580c);
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+        }
+
+        .emotion-fill.neutral {
+            background: linear-gradient(90deg, #6b7280, #4b5563);
+            box-shadow: 0 0 20px rgba(107, 114, 128, 0.4);
+        }
+
+        /* Pulse animation for high values */
+        @keyframes fillPulse {
+            0%, 100% {
+                transform: scaleY(1);
+            }
+            50% {
+                transform: scaleY(1.05);
+            }
+        }
+
+        .emotion-fill.high-value {
+            animation: fillPulse 1.5s ease-in-out infinite;
         }
 
         .engagement-circle {
@@ -332,6 +438,14 @@
         .sleep-warning.active {
             display: block;
         }
+
+        /* Add gradient definition */
+        #gradient stop:first-child {
+            stop-color: #007bff;
+        }
+        #gradient stop:last-child {
+            stop-color: #00c6ff;
+        }
     </style>
 </head>
 <body>
@@ -341,12 +455,15 @@
                 <h1>🎓 EduGaze Ultimate</h1>
                 <p style="color: #6b7280; margin-top: 5px;">Hybrid: face-api.js + MediaPipe</p>
             </div>
-            <div class="status-badge status-loading" id="statusBadge">Loading...</div>
+            <div class="header-right">
+                <a href="index.html" class="btn-login">🏠 Home</a>
+                <div class="status-badge status-loading" id="statusBadge">Loading...</div>
+            </div>
         </div>
 
         <div class="main-grid">
             <div class="card">
-                <h3>📹 Live Video</h3>
+                <h3 style="padding: 20px; padding-bottom: 0;">📹 Live Video</h3>
                 
                 <div class="video-wrapper">
                     <video id="inputVideo" autoplay muted playsinline></video>
@@ -365,7 +482,7 @@
             </div>
 
             <div class="card">
-                <h3>📊 Metrics</h3>
+                <h3 style="padding: 20px; padding-bottom: 0;">📊 Metrics</h3>
 
                 <div class="stats-grid">
                     <div class="stat-box" id="earBox">
@@ -396,8 +513,14 @@
 
                 <div class="engagement-circle">
                     <svg width="150" height="150" style="transform: rotate(-90deg)">
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#007bff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#00c6ff;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
                         <circle cx="75" cy="75" r="65" fill="none" stroke="#e5e7eb" stroke-width="12"></circle>
-                        <circle id="engagementCircle" cx="75" cy="75" r="65" fill="none" stroke="url(#gradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="408" stroke-dashoffset="408"></circle>
+                        <circle id="engagementCircle" cx="75" cy="75" r="65" fill="none" stroke="url(#gradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="408" stroke-dashoffset="408" style="transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></circle>
                     </svg>
                     <div class="engagement-score">
                         <span id="engagementValue">0</span>
@@ -705,14 +828,16 @@
             const emojis = {happy:'😊', sad:'😢', angry:'😠', fearful:'😨', disgusted:'🤢', surprised:'😮', neutral:'😐'};
 
             for (const [name, val] of Object.entries(emotions)) {
+                const highValue = val > 60 ? 'high-value' : '';
+                
                 list.innerHTML += `
                     <div class="emotion-item">
                         <div class="emotion-header">
-                            <span>${emojis[name]} ${name}</span>
+                            <span>${emojis[name]} ${name.charAt(0).toUpperCase() + name.slice(1)}</span>
                             <span>${val.toFixed(0)}%</span>
                         </div>
                         <div class="emotion-bar">
-                            <div class="emotion-fill" style="width:${val} %"></div>
+                            <div class="emotion-fill ${name} ${highValue}" style="width:${val}%"></div>
                         </div>
                     </div>
                 `;
